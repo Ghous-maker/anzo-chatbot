@@ -1,6 +1,5 @@
 import os
 import re
-import csv
 from datetime import datetime
 from pathlib import Path
 
@@ -19,133 +18,108 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu, footer, header {visibility: hidden;}
     .stDeployButton {display: none;}
+    .block-container {padding-top: 1.4rem; max-width: 820px;}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-PRIMARY_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+PRIMARY_MODEL = "openai/gpt-oss-20b"
 FALLBACK_MODELS = [
     PRIMARY_MODEL,
     "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
     "gemma2-9b-it",
 ]
 LEADS_FILE = Path("anzo_leads.csv")
 
 SYSTEM_PROMPT = """
-You are the AI business consultant and lead qualification assistant for ANZO,
-an AI automation and software agency.
+You are ANZO's AI business consultant.
 
-Your job is NOT to act like a basic FAQ chatbot or a service menu.
+ANZO is an AI automation and software agency. You help a visitor understand
+their business problem, then recommend a suitable ANZO solution, then qualify
+serious prospects.
 
-Your objective:
-UNDERSTAND THE CLIENT'S PROBLEM -> DISCOVER THEIR GOAL -> IDENTIFY THE RIGHT
-SOLUTION -> EXPLAIN IT CLEARLY -> QUALIFY THE PROJECT -> GUIDE SERIOUS
-PROSPECTS TO ANZO.
+You are NOT:
+- a generic FAQ bot
+- a service menu
+- the client
+- a salesperson who invents prices, timelines, clients, results, or guarantees
 
-ANZO helps businesses reduce repetitive manual work, improve operations,
-manage leads, save time, and build custom digital solutions.
+IDENTITY LOCK:
+- Always speak as ANZO's consultant.
+- Never speak as the visitor.
+- Never invent the visitor's lead volume, tools, budget, process, company, or results.
+- If a fact was not given by the visitor, do not pretend it exists.
 
-ANZO capabilities include:
+ANZO capabilities, not a fixed menu:
 - AI chatbots and AI agents
 - AI voice / call agents
 - Customer support, sales, and lead qualification agents
 - WhatsApp AI and automation
-- Business process and workflow automation
+- Business process automation
 - Lead management and automated follow-ups
 - Email, CRM, Google Sheets, data, reporting, and notification automation
 - Website development
-- Web applications and custom software
-- Dashboards, portals, and internal tools
+- Web applications, dashboards, portals, and custom software
 - Mobile apps for Android and iOS
-- Other custom AI-powered business solutions
 
-These are capabilities, not a fixed product menu. Combine them when the
-business problem needs a connected system.
+A project can combine several of these.
 
-CORE BEHAVIOUR:
-- Always understand the business problem before recommending a solution.
-- If the client mentions a technology, discover why they need it.
-- Use information already provided. Do not ask for it again.
-- If the client is unsure, help them discover the bottleneck.
-- Think: business goal -> current problem -> current process -> bottleneck ->
-  desired outcome -> ANZO solution.
+CONSULTING METHOD:
+1. Understand the goal.
+2. Identify the real problem.
+3. Understand the current process only if still unknown.
+4. Recommend a connected ANZO solution.
+5. Ask exactly one next question.
 
-When recommending a solution, keep it short:
-1. One sentence identifying the problem.
-2. One sentence explaining the recommended ANZO solution.
-3. One sentence explaining the business benefit.
-4. Exactly one next question.
+If the visitor already explained the problem, do not ask what their challenge is.
 
-SERVICE ROUTING:
-- AI agents: intelligent conversations, support, sales, qualification.
-- Voice agents: phone calls, call answering, appointments, voice interaction.
-- Automation: repetitive work, CRM updates, data movement, notifications,
-  follow-ups, operational workflows.
-- Website development: online business presence.
-- Web apps / custom software: dashboards, portals, SaaS, internal systems.
-- Mobile apps: Android / iOS experiences.
-- Recommend a combination when needed, for example:
-  website + WhatsApp AI agent + lead qualification + CRM + follow-up + dashboard.
+RESPONSE SHAPE:
+- Sentence 1: Restate the visitor's problem in their language. Do not add new facts.
+- Sentence 2: Recommend the ANZO solution and what it would do.
+- Sentence 3: Business benefit without fake percentages, case studies, or guarantees.
+- Sentence 4: Exactly one short question.
 
-LEAD QUALIFICATION:
-Collect naturally over the conversation, never all at once:
-- Name
-- Company / business
-- Business type
-- Main problem
-- Current process
-- Desired outcome
-- Important features
-- Existing tools / systems
-- Timeline
-- Approximate budget / investment range
-- Email
-- Phone / WhatsApp
+LANGUAGE:
+- Match the visitor's latest message.
+- Roman Urdu / Hinglish in, Roman Urdu / Hinglish out.
+- English in, English out.
+- Urdu script in, Urdu out.
+- Keep product names in English: WhatsApp, CRM, Excel, Google Sheets.
 
-PRICING AND TIMELINES:
-- Never invent ANZO pricing.
-- Never invent delivery timelines.
-- Explain that cost and timeline depend on scope, complexity, features,
-  integrations, platforms, workflows, AI requirements, and implementation.
-- If asked for an exact number, say the ANZO team must review requirements.
-
-ACCURACY:
-Never invent clients, case studies, testimonials, results, guarantees,
-technologies, integrations, team members, previous projects, prices, or
-timelines. If information is unavailable, say the ANZO team can confirm it.
-
-TONE:
-Professional, confident, concise, friendly, modern, human, and
-solution-focused. No aggressive sales language. No excessive emojis.
-No heavy jargon. Do not repeatedly ask "How can I help you today?"
-
-STRICT RESPONSE RULES:
-- Match the user's latest message language.
-- If the user writes in Roman Urdu / Hinglish, reply in simple Roman Urdu / Hinglish.
-- If the user writes in Urdu script, reply in Urdu.
-- If the user writes in English, reply in English.
-- Keep tool names in English: WhatsApp, CRM, Excel, Google Sheets.
-- Ask exactly one short question per response.
-- That question must request only one piece of information.
+QUESTION RULE:
+- Ask exactly one question.
+- Ask for only one piece of information.
 - Never join two requests with and, or, aur, ya, or a comma list.
 - Never use more than one question mark.
 - Bad: Aapki team leads kaise handle karti hai, aur kaunse tools use karti hai?
 - Good: Nayi lead aane ke baad aapki team sabse pehle kya karti hai?
 
-Always behave like a problem-solving business consultant, not a service menu.
+PRICING / TIMELINE:
+- Never invent a price or deadline.
+- Say ANZO confirms cost and timeline after reviewing scope.
+
+ACCURACY:
+- Never invent clients, testimonials, team members, integrations, or results.
+- If unknown, say the ANZO team can confirm it.
+
+GOOD EXAMPLE
+Visitor: Meri real estate agency hai. Website aur WhatsApp se leads aati hain, lekin meri team late reply karti hai aur kai leads miss ho jati hain.
+You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late milta hai, is liye potential clients nikal jate hain. ANZO iske liye WhatsApp aur website ka connected AI lead agent bana sakta hai jo turant jawab de, zaroori details le, qualify kare, aur serious leads aapki team tak bheje. Is se missed follow-ups kam ho sakte hain aur team ko sirf ready conversations milengi. Abhi yeh leads aap kahan save karte hain?
+
+BAD EXAMPLES
+- Mujhe har din 20-30 leads milte hain.
+- ANZO chatbots provide karta hai. Price 50,000 hai.
+- Conversion 40 percent badh jayegi.
+- Aapki team leads kaise handle karti hai, aur kaunse tools use karti hai?
 """
 
 WELCOME_MESSAGE = (
-    "Welcome to ANZO. Tell me what you want to build, automate, or improve "
-    "in your business. You can also tell me where your team is spending too "
-    "much time or losing potential customers."
+    "ANZO AI consultant. Bataiye aap apne business mein kya banana, automate, "
+    "ya improve karna chahte hain. Agar team ka time zaya ho raha ho ya leads "
+    "miss ho rahi hon, woh bhi bata sakte hain."
 )
 
 ROMAN_MARKERS = {
@@ -153,9 +127,24 @@ ROMAN_MARKERS = {
     "aapki", "apki", "hum", "hamari", "lekin", "magar", "nahi", "nahin",
     "chahiye", "karna", "karte", "karti", "hota", "hoti", "wala", "wali",
     "yeh", "ye", "woh", "wo", "abhi", "kitna", "kitni", "kaise", "kaisa",
-    "batao", "bataen", "please", "team", "se", "ko", "ka", "ki", "ke",
-    "mein", "main", "aur", "ya", "liye", "baad", "pehle", "process"
+    "batao", "bataen", "team", "se", "ko", "ka", "ki", "ke", "mein", "main",
+    "aur", "ya", "liye", "baad", "pehle", "process", "leads", "lead"
 }
+
+ROLE_LEAK = re.compile(
+    r"^\s*(mujhe|hamari agency|meri agency|mujh ko)\b",
+    re.IGNORECASE
+)
+
+
+def get_api_key() -> str:
+    key = os.getenv("GROQ_API_KEY", "").strip()
+    if key:
+        return key
+    try:
+        return str(st.secrets.get("GROQ_API_KEY", "")).strip()
+    except Exception:
+        return ""
 
 
 def detect_language(text: str) -> str:
@@ -173,18 +162,21 @@ def detect_language(text: str) -> str:
 def language_instruction(lang: str) -> str:
     if lang == "roman_urdu":
         return (
-            "The user wrote in Roman Urdu / Hinglish. "
+            "The visitor wrote in Roman Urdu / Hinglish. "
             "Reply in simple Roman Urdu / Hinglish. "
             "Do not switch to full English. "
+            "You are ANZO's consultant, not the visitor. "
             "Ask exactly one short question."
         )
     if lang == "urdu":
         return (
-            "The user wrote in Urdu. Reply in simple Urdu. "
+            "The visitor wrote in Urdu. Reply in simple Urdu. "
+            "You are ANZO's consultant, not the visitor. "
             "Ask exactly one short question."
         )
     return (
-        "The user wrote in English. Reply in clear English. "
+        "The visitor wrote in English. Reply in clear English. "
+        "You are ANZO's consultant, not the visitor. "
         "Ask exactly one short question."
     )
 
@@ -202,22 +194,19 @@ def enforce_one_question(text: str) -> str:
     if not text:
         return text
     marks = [i for i, ch in enumerate(text) if ch in "??"]
-    if len(marks) <= 1:
-        # Still block joined requests like "X, aur Y?"
+    if not marks:
         return text
     return text[: marks[0] + 1].strip()
 
 
-def get_client() -> OpenAI:
-    if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY missing")
+def get_client(api_key: str) -> OpenAI:
     return OpenAI(
-        api_key=GROQ_API_KEY,
+        api_key=api_key,
         base_url="https://api.groq.com/openai/v1"
     )
 
 
-def call_model(client: OpenAI, messages: list, temperature: float = 0.4) -> str:
+def call_model(client: OpenAI, messages: list, temperature: float = 0.25) -> str:
     last_error = None
     tried = []
     for model in FALLBACK_MODELS:
@@ -229,7 +218,7 @@ def call_model(client: OpenAI, messages: list, temperature: float = 0.4) -> str:
                 model=model,
                 messages=messages,
                 temperature=temperature,
-                max_tokens=700,
+                max_tokens=650,
             )
             return (response.choices[0].message.content or "").strip()
         except Exception as error:
@@ -241,41 +230,38 @@ def call_model(client: OpenAI, messages: list, temperature: float = 0.4) -> str:
     raise RuntimeError(str(last_error) if last_error else "No model available")
 
 
-def rewrite_language(client: OpenAI, text: str, lang: str) -> str:
-    if lang != "roman_urdu":
+def polish_reply(client: OpenAI, text: str, lang: str, user_message: str) -> str:
+    needs_language_fix = lang == "roman_urdu" and not looks_like_roman_urdu(text)
+    needs_role_fix = bool(ROLE_LEAK.search(text or ""))
+    if not needs_language_fix and not needs_role_fix:
         return text
-    if looks_like_roman_urdu(text):
-        return text
+
+    instructions = [
+        "Rewrite this ANZO consultant reply.",
+        "Keep the same meaning. Do not add prices, timelines, results, or new facts.",
+        "Speak as ANZO's consultant, never as the client.",
+        "Keep exactly one question.",
+        f"Visitor message: {user_message}",
+    ]
+    if lang == "roman_urdu":
+        instructions.append("Write in simple Roman Urdu / Hinglish.")
+    elif lang == "urdu":
+        instructions.append("Write in simple Urdu.")
+    else:
+        instructions.append("Write in clear English.")
+
     messages = [
-        {
-            "role": "system",
-            "content": (
-                "Rewrite the assistant message in simple Roman Urdu / Hinglish. "
-                "Keep the same meaning. Do not add new facts, prices, or claims. "
-                "Keep exactly one question. Keep tool names in English."
-            ),
-        },
+        {"role": "system", "content": " ".join(instructions)},
         {"role": "user", "content": text},
     ]
-    rewritten = call_model(client, messages, temperature=0.2)
+    rewritten = call_model(client, messages, temperature=0.1)
     return rewritten or text
-
-
-def extract_contact(text: str) -> dict:
-    email_match = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text or "")
-    phone_match = re.search(r"(\+?\d[\d\s-]{8,}\d)", text or "")
-    return {
-        "email": email_match.group(0) if email_match else "",
-        "phone": phone_match.group(0).strip() if phone_match else "",
-    }
 
 
 def save_lead(data: dict) -> None:
     is_new = not LEADS_FILE.exists()
-    fieldnames = [
-        "timestamp", "name", "company", "email", "phone",
-        "problem", "notes"
-    ]
+    fieldnames = ["timestamp", "name", "company", "email", "phone", "problem", "notes"]
+    import csv
     with LEADS_FILE.open("a", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         if is_new:
@@ -295,8 +281,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": WELCOME_MESSAGE}
     ]
-if "lead_saved" not in st.session_state:
-    st.session_state.lead_saved = False
 
 st.title("ANZO")
 st.caption("AI Business Consultant")
@@ -304,28 +288,22 @@ st.caption("AI Business Consultant")
 with st.sidebar:
     st.subheader("ANZO")
     st.write(
-        "ANZO helps businesses reduce manual work, handle leads faster, "
-        "and build custom AI, automation, website, and software solutions."
+        "ANZO businesses ki repetitive work kam karta hai, leads behtar handle "
+        "karta hai, aur custom AI, automation, website, aur software solutions banata hai."
     )
-    st.write("This chatbot understands your problem first, then recommends a solution.")
-    st.divider()
-    st.caption("Pricing and timelines are confirmed by the ANZO team after reviewing requirements.")
+    st.caption("Price aur timeline ANZO team requirements dekh kar confirm karti hai.")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-user_message = st.chat_input("Write your message here...")
+user_message = st.chat_input("Apna message yahan likhein...")
+api_key = get_api_key()
 
 if user_message:
     st.session_state.messages.append({"role": "user", "content": user_message})
     with st.chat_message("user"):
         st.markdown(user_message)
-
-    if not GROQ_API_KEY:
-        with st.chat_message("assistant"):
-            st.error("Chatbot is not connected yet. GROQ_API_KEY is missing.")
-        st.stop()
 
     lang = detect_language(user_message)
     api_messages = [
@@ -336,12 +314,23 @@ if user_message:
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                client = get_client()
+                if not api_key:
+                    raise RuntimeError("missing key")
+                client = get_client(api_key)
                 reply = call_model(client, api_messages)
-                reply = rewrite_language(client, reply, lang)
+                reply = polish_reply(client, reply, lang, user_message)
                 reply = enforce_one_question(reply)
-                if not reply:
-                    reply = "Samajh gaya. Aapki current process kya hai?"
+                if not reply or ROLE_LEAK.search(reply):
+                    if lang == "english":
+                        reply = (
+                            "Your main issue seems to be delayed lead handling. "
+                            "Where do you currently save website and WhatsApp leads?"
+                        )
+                    else:
+                        reply = (
+                            "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
+                            "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
+                        )
                 st.markdown(reply)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": reply}
@@ -349,7 +338,7 @@ if user_message:
             except Exception:
                 fallback = (
                     "Sorry, main abhi jawab nahi de paa raha. "
-                    "Please thodi der baad try karein, ya ANZO team se direct baat karein."
+                    "Thodi der baad try karein, ya ANZO team se direct baat karein."
                 )
                 st.markdown(fallback)
                 st.session_state.messages.append(
@@ -358,7 +347,6 @@ if user_message:
 
 st.divider()
 st.subheader("ANZO team ko details bhejein")
-st.caption("Jab aap ready hon, apna contact chhod sakte hain. Yeh details is computer par save hongi.")
 
 with st.form("lead_form", clear_on_submit=True):
     name = st.text_input("Name")
@@ -367,22 +355,19 @@ with st.form("lead_form", clear_on_submit=True):
     phone = st.text_input("Phone / WhatsApp")
     problem = st.text_area("Main problem")
     submitted = st.form_submit_button("Save lead")
-
     if submitted:
         if not (name or email or phone):
             st.warning("Name, email, ya phone mein se kuch zaroor likhein.")
         else:
-            contact = extract_contact(" ".join([email, phone]))
             save_lead(
                 {
                     "timestamp": datetime.now().isoformat(timespec="seconds"),
                     "name": name.strip(),
                     "company": company.strip(),
-                    "email": email.strip() or contact["email"],
-                    "phone": phone.strip() or contact["phone"],
+                    "email": email.strip(),
+                    "phone": phone.strip(),
                     "problem": problem.strip(),
                     "notes": conversation_text(st.session_state.messages),
                 }
             )
-            st.session_state.lead_saved = True
-            st.success("Lead save ho gayi. ANZO team isey is computer ki anzo_leads.csv file mein dekh sakti hai.")
+            st.success("Lead save ho gayi.")
