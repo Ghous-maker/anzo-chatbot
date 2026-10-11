@@ -1,0 +1,4 @@
+__pycache__/
+.env
+anzo_leads.csv
+.streamlit/secrets.toml
