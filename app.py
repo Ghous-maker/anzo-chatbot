@@ -21,8 +21,13 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    html, body, [class*="css"] { font-family: Inter, Arial, sans-serif; }
-    .stApp { background: #f4f6f8; }
+    html, body, [class*="css"], .stApp {
+        font-family: Inter, Arial, sans-serif;
+        color-scheme: light !important;
+    }
+    .stApp {
+        background: linear-gradient(165deg, #061428 0%, #0b2a5b 42%, #1d4ed8 100%) !important;
+    }
     #MainMenu, footer, header { visibility: hidden !important; }
     .stDeployButton, .stAppDeployButton { display: none !important; }
     [data-testid="stToolbar"],
@@ -33,46 +38,110 @@ st.markdown(
     [data-testid="stAppToolbar"],
     [data-testid="manage-app-button"] { display: none !important; }
     .stApp > header { display: none !important; }
-    .block-container { padding: 1.2rem 1rem 6rem 1rem !important; max-width: 760px; }
-    .anzo-wrap {
-        background: #ffffff;
-        border: 1px solid #e6e8eb;
-        border-radius: 16px;
-        padding: 18px 18px 8px 18px;
-        box-shadow: 0 8px 28px rgba(16,24,40,0.06);
+
+    .block-container {
+        padding: 1.1rem 1rem 7rem 1rem !important;
+        max-width: 780px;
+    }
+
+    .anzo-hero {
+        background: linear-gradient(135deg, #0b1f44 0%, #163a7a 55%, #2563eb 100%);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 18px;
+        padding: 22px 22px 18px 22px;
+        box-shadow: 0 16px 40px rgba(2, 12, 36, 0.28);
+        margin-bottom: 14px;
     }
     .anzo-kicker {
+        margin: 0 0 8px 0;
+        color: #93c5fd;
         font-size: 12px;
-        letter-spacing: 0.12em;
+        font-weight: 700;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #667085;
-        font-weight: 600;
-        margin: 0 0 6px 0;
     }
     .anzo-title {
-        font-size: 28px;
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 30px;
         line-height: 1.15;
         font-weight: 700;
-        color: #101828;
-        margin: 0;
     }
     .anzo-sub {
         margin: 8px 0 0 0;
-        color: #475467;
+        color: #dbeafe !important;
         font-size: 15px;
-        line-height: 1.5;
+        line-height: 1.55;
     }
+
     [data-testid="stChatMessage"] {
-        background: transparent;
-        padding: 0.35rem 0;
+        background: rgba(255,255,255,0.96) !important;
+        border: 1px solid #dbe4f2;
+        border-radius: 14px;
+        padding: 10px 12px !important;
+        margin: 8px 0 !important;
+        box-shadow: 0 6px 18px rgba(7, 20, 48, 0.08);
     }
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stMarkdownContainer"] p {
+        color: #0f172a !important;
+    }
+
     [data-testid="stExpander"] {
-        border: 1px solid #e6e8eb;
-        border-radius: 12px;
-        background: #fbfcfd;
+        background: #ffffff !important;
+        border: 1px solid #c9d7ee !important;
+        border-radius: 14px !important;
+    }
+    [data-testid="stExpander"] p,
+    [data-testid="stExpander"] label,
+    [data-testid="stExpander"] span {
+        color: #1e3a8a !important;
+    }
+    .stTextInput label, .stTextArea label {
+        color: #1e3a8a !important;
+        font-weight: 600 !important;
     }
     .stTextInput input, .stTextArea textarea {
+        background: #f8fbff !important;
+        color: #0f172a !important;
+        border: 1px solid #b7c9e6 !important;
         border-radius: 10px !important;
+    }
+    .stTextInput input::placeholder,
+    .stTextArea textarea::placeholder {
+        color: #64748b !important;
+    }
+
+    .stButton > button,
+    .stFormSubmitButton button {
+        background: linear-gradient(135deg, #0b1f44 0%, #1d4ed8 52%, #38bdf8 100%) !important;
+        color: #ffffff !important;
+        border: 0 !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        padding: 0.55rem 1.1rem !important;
+        box-shadow: 0 8px 18px rgba(29, 78, 216, 0.35) !important;
+    }
+    .stButton > button:hover,
+    .stFormSubmitButton button:hover {
+        filter: brightness(1.08);
+        color: #ffffff !important;
+    }
+
+    [data-testid="stChatInput"] {
+        background: rgba(7, 20, 48, 0.92) !important;
+        border-top: 1px solid rgba(147, 197, 253, 0.25);
+    }
+    [data-testid="stChatInput"] textarea {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8) !important;
+        color: #ffffff !important;
+        border: 0 !important;
     }
     </style>
     """,
@@ -312,7 +381,7 @@ if "messages" not in st.session_state:
 
 st.markdown(
     """
-    <div class="anzo-wrap">
+    <div class="anzo-hero">
       <p class="anzo-kicker">ANZO Agency</p>
       <h1 class="anzo-title">AI Business Consultant</h1>
       <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
@@ -320,8 +389,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-st.write("")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -369,8 +436,8 @@ if user_message:
                     {"role": "assistant", "content": fallback}
                 )
 
-with st.expander("Contact ANZO team"):
-    st.caption("Share your details when you are ready. This is optional.")
+with st.expander("Contact ANZO team", expanded=False):
+    st.caption("Optional. Share your details when you are ready.")
     with st.form("lead_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -379,7 +446,7 @@ with st.expander("Contact ANZO team"):
         with col2:
             company = st.text_input("Company")
             phone = st.text_input("Phone / WhatsApp")
-        problem = st.text_area("Main problem", height=80)
+        problem = st.text_area("Main problem", height=70)
         submitted = st.form_submit_button("Send to ANZO")
         if submitted:
             if not (name or email or phone):
