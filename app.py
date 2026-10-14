@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(
-    page_title="ANZO AI Consultant",
+    page_title="ANZO | AI Business Consultant",
     page_icon="💼",
     layout="centered"
 )
@@ -19,17 +19,61 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    #MainMenu, footer, header {visibility: hidden !important;}
-    .stDeployButton, .stAppDeployButton {display: none !important;}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"] { font-family: Inter, Arial, sans-serif; }
+    .stApp { background: #f4f6f8; }
+    #MainMenu, footer, header { visibility: hidden !important; }
+    .stDeployButton, .stAppDeployButton { display: none !important; }
     [data-testid="stToolbar"],
     [data-testid="stDecoration"],
     [data-testid="stStatusWidget"],
     [data-testid="stHeader"],
     [data-testid="stToolbarActions"],
     [data-testid="stAppToolbar"],
-    [data-testid="manage-app-button"] {display: none !important;}
-    .stApp > header {display: none !important;}
-    div[data-testid="stBottom"] button {display: none !important;}
+    [data-testid="manage-app-button"] { display: none !important; }
+    .stApp > header { display: none !important; }
+    .block-container { padding: 1.2rem 1rem 6rem 1rem !important; max-width: 760px; }
+    .anzo-wrap {
+        background: #ffffff;
+        border: 1px solid #e6e8eb;
+        border-radius: 16px;
+        padding: 18px 18px 8px 18px;
+        box-shadow: 0 8px 28px rgba(16,24,40,0.06);
+    }
+    .anzo-kicker {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #667085;
+        font-weight: 600;
+        margin: 0 0 6px 0;
+    }
+    .anzo-title {
+        font-size: 28px;
+        line-height: 1.15;
+        font-weight: 700;
+        color: #101828;
+        margin: 0;
+    }
+    .anzo-sub {
+        margin: 8px 0 0 0;
+        color: #475467;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+    [data-testid="stChatMessage"] {
+        background: transparent;
+        padding: 0.35rem 0;
+    }
+    [data-testid="stExpander"] {
+        border: 1px solid #e6e8eb;
+        border-radius: 12px;
+        background: #fbfcfd;
+    }
+    .stTextInput input, .stTextArea textarea {
+        border-radius: 10px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -70,16 +114,12 @@ ANZO capabilities, not a fixed menu:
 - Web applications, dashboards, portals, and custom software
 - Mobile apps for Android and iOS
 
-A project can combine several of these.
-
 CONSULTING METHOD:
 1. Understand the goal.
 2. Identify the real problem.
 3. Ask about the current process only if still unknown.
 4. Recommend a connected ANZO solution.
 5. Ask exactly one next question.
-
-If the visitor already explained the problem, do not ask what their challenge is.
 
 RESPONSE SHAPE:
 - Sentence 1: Restate the visitor's problem. Do not add new facts.
@@ -98,16 +138,10 @@ QUESTION RULE:
 - Ask for only one piece of information.
 - Never join two requests with and, or, aur, ya, or a comma list.
 - Never use more than one question mark.
-- Bad: Aapki team leads kaise handle karti hai, aur kaunse tools use karti hai?
-- Good: Abhi yeh leads aap kahan save karte hain?
 
 PRICING / TIMELINE:
 - Never invent a price or deadline.
 - Say ANZO confirms cost and timeline after reviewing scope.
-
-ACCURACY:
-- Never invent clients, testimonials, team members, integrations, or results.
-- If unknown, say the ANZO team can confirm it.
 
 GOOD EXAMPLE
 Visitor: Meri real estate agency hai. Website aur WhatsApp se leads aati hain, lekin meri team late reply karti hai aur kai leads miss ho jati hain.
@@ -115,9 +149,9 @@ You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late mi
 """
 
 WELCOME_MESSAGE = (
-    "ANZO AI consultant. Bataiye aap apne business mein kya banana, automate, "
-    "ya improve karna chahte hain. Agar team ka time zaya ho raha ho ya leads "
-    "miss ho rahi hon, woh bhi bata sakte hain."
+    "I'm ANZO's AI business consultant. Tell me what you want to build, "
+    "automate, or improve in your business — or where your team is losing "
+    "time or missing leads."
 )
 
 ROMAN_MARKERS = {
@@ -276,14 +310,24 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": WELCOME_MESSAGE}
     ]
 
-st.title("ANZO")
-st.caption("AI Business Consultant")
+st.markdown(
+    """
+    <div class="anzo-wrap">
+      <p class="anzo-kicker">ANZO Agency</p>
+      <h1 class="anzo-title">AI Business Consultant</h1>
+      <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.write("")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-user_message = st.chat_input("Apna message yahan likhein...")
+user_message = st.chat_input("Type your message...")
 api_key = get_api_key()
 
 if user_message:
@@ -317,37 +361,39 @@ if user_message:
                 )
             except Exception:
                 fallback = (
-                    "Sorry, main abhi jawab nahi de paa raha. "
-                    "Thodi der baad try karein, ya ANZO team se direct baat karein."
+                    "Sorry, I cannot reply right now. Please try again in a moment "
+                    "or contact the ANZO team directly."
                 )
                 st.markdown(fallback)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": fallback}
                 )
 
-st.divider()
-st.subheader("ANZO team ko details bhejein")
-
-with st.form("lead_form", clear_on_submit=True):
-    name = st.text_input("Name")
-    company = st.text_input("Company / business")
-    email = st.text_input("Email")
-    phone = st.text_input("Phone / WhatsApp")
-    problem = st.text_area("Main problem")
-    submitted = st.form_submit_button("Send to ANZO team")
-    if submitted:
-        if not (name or email or phone):
-            st.warning("Name, email, ya phone mein se kuch zaroor likhein.")
-        else:
-            save_lead(
-                {
-                    "timestamp": datetime.now().isoformat(timespec="seconds"),
-                    "name": name.strip(),
-                    "company": company.strip(),
-                    "email": email.strip(),
-                    "phone": phone.strip(),
-                    "problem": problem.strip(),
-                    "notes": conversation_text(st.session_state.messages),
-                }
-            )
-            st.success("Lead save ho gayi.")
+with st.expander("Contact ANZO team"):
+    st.caption("Share your details when you are ready. This is optional.")
+    with st.form("lead_form", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("Name")
+            email = st.text_input("Email")
+        with col2:
+            company = st.text_input("Company")
+            phone = st.text_input("Phone / WhatsApp")
+        problem = st.text_area("Main problem", height=80)
+        submitted = st.form_submit_button("Send to ANZO")
+        if submitted:
+            if not (name or email or phone):
+                st.warning("Please enter a name, email, or phone number.")
+            else:
+                save_lead(
+                    {
+                        "timestamp": datetime.now().isoformat(timespec="seconds"),
+                        "name": name.strip(),
+                        "company": company.strip(),
+                        "email": email.strip(),
+                        "phone": phone.strip(),
+                        "problem": problem.strip(),
+                        "notes": conversation_text(st.session_state.messages),
+                    }
+                )
+                st.success("Thanks. Your details have been saved.")
