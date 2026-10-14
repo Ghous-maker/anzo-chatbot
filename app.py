@@ -1,6 +1,8 @@
 import os
 import re
 import csv
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -12,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(
-    page_title="ANZO | AI Business Consultant",
+    page_title="ANG | AI Business Consultant",
     page_icon="💬",
     layout="centered"
 )
@@ -101,13 +103,13 @@ html, body, [class*="css"], .stApp {
     margin: 1.2rem auto 7rem auto !important;
     padding: 1.4rem 1.6rem 1.8rem 1.6rem !important;
 }
-.anzo-top {
+.ang-top {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 26px;
 }
-.anzo-mark {
+.ang-mark {
     width: 38px;
     height: 38px;
     border-radius: 12px;
@@ -119,19 +121,19 @@ html, body, [class*="css"], .stApp {
     font-weight: 700;
     font-size: 16px;
 }
-.anzo-brand {
+.ang-brand {
     color: var(--c-dark);
     font-weight: 500;
     font-size: 17px;
 }
 
 /* ---------- Hero ---------- */
-.anzo-hero {
+.ang-hero {
     text-align: center;
     width: 100%;
     padding: 10px 10px 0 10px;
 }
-.anzo-logo {
+.ang-logo {
     width: 76px;
     height: 76px;
     margin: 0 auto 22px auto;
@@ -142,14 +144,14 @@ html, body, [class*="css"], .stApp {
     justify-content: center;
     box-shadow: 0 14px 30px rgba(64, 64, 64, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
 }
-div.anzo-hello {
+div.ang-hello {
     margin: 0;
     color: #b2a3a4 !important;
     font-size: 30px !important;
     font-weight: 600 !important;
     line-height: 1.25 !important;
 }
-div.anzo-title {
+div.ang-title {
     margin: 2px 0 0 0;
     color: #565656 !important;
     font-size: 38px !important;
@@ -157,7 +159,7 @@ div.anzo-title {
     line-height: 1.15 !important;
     letter-spacing: -0.5px;
 }
-div.anzo-sub {
+div.ang-sub {
     max-width: 480px;
     margin: 14px auto 0 auto;
     color: #8f8588 !important;
@@ -338,24 +340,24 @@ FALLBACK_MODELS = [
     "llama-3.1-8b-instant",
     "gemma2-9b-it",
 ]
-LEADS_FILE = Path("anzo_leads.csv")
+LEADS_FILE = Path("ang_leads.csv")
 
 SYSTEM_PROMPT = """
-You are ANZO's AI business consultant.
+You are ANG's AI business consultant.
 
-ANZO is an AI automation and software agency. Understand the visitor's
-business problem first, then recommend a suitable ANZO solution, then
+ANG is an AI automation and software agency. Understand the visitor's
+business problem first, then recommend a suitable ANG solution, then
 qualify serious prospects.
 
 You are NOT a FAQ bot, service menu, or the visitor.
 
 IDENTITY LOCK:
-- Always speak as ANZO's consultant.
+- Always speak as ANG's consultant.
 - Never speak as the visitor.
 - Never invent the visitor's lead volume, tools, budget, process, or results.
 - If the visitor did not say a fact, do not pretend it exists.
 
-ANZO capabilities, not a fixed menu:
+ANG capabilities, not a fixed menu:
 - AI chatbots and AI agents
 - AI voice / call agents
 - Customer support, sales, and lead qualification agents
@@ -371,12 +373,12 @@ CONSULTING METHOD:
 1. Understand the goal.
 2. Identify the real problem.
 3. Ask about the current process only if still unknown.
-4. Recommend a connected ANZO solution.
+4. Recommend a connected ANG solution.
 5. Ask exactly one next question.
 
 RESPONSE SHAPE:
 - Sentence 1: Restate the visitor's problem. Do not add new facts.
-- Sentence 2: Recommend the ANZO solution and what it would do.
+- Sentence 2: Recommend the ANG solution and what it would do.
 - Sentence 3: Business benefit without fake percentages, case studies, or guarantees.
 - Sentence 4: Exactly one short question.
 
@@ -394,15 +396,15 @@ QUESTION RULE:
 
 PRICING / TIMELINE:
 - Never invent a price or deadline.
-- Say ANZO confirms cost and timeline after reviewing scope.
+- Say ANG confirms cost and timeline after reviewing scope.
 
 GOOD EXAMPLE
 Visitor: Meri real estate agency hai. Website aur WhatsApp se leads aati hain, lekin meri team late reply karti hai aur kai leads miss ho jati hain.
-You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late milta hai, is liye potential clients nikal jate hain. ANZO iske liye WhatsApp aur website ka connected AI lead agent bana sakta hai jo turant jawab de, zaroori details le, qualify kare, aur serious leads aapki team tak bheje. Is se missed follow-ups kam ho sakte hain aur team ko sirf ready conversations milengi. Abhi yeh leads aap kahan save karte hain?
+You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late milta hai, is liye potential clients nikal jate hain. ANG iske liye WhatsApp aur website ka connected AI lead agent bana sakta hai jo turant jawab de, zaroori details le, qualify kare, aur serious leads aapki team tak bheje. Is se missed follow-ups kam ho sakte hain aur team ko sirf ready conversations milengi. Abhi yeh leads aap kahan save karte hain?
 """
 
 WELCOME_MESSAGE = (
-    "I'm ANZO's AI business consultant. Tell me what you want to build, "
+    "I'm ANG's AI business consultant. Tell me what you want to build, "
     "automate, or improve in your business — or where your team is losing "
     "time or missing leads."
 )
@@ -441,14 +443,18 @@ ROLE_LEAK = re.compile(
 )
 
 
-def get_api_key() -> str:
-    key = os.getenv("GROQ_API_KEY", "").strip()
-    if key:
-        return key
+def get_secret(name: str, default: str = "") -> str:
+    value = os.getenv(name, "").strip()
+    if value:
+        return value
     try:
-        return str(st.secrets.get("GROQ_API_KEY", "")).strip()
+        return str(st.secrets.get(name, default)).strip()
     except Exception:
-        return ""
+        return default
+
+
+def get_api_key() -> str:
+    return get_secret("GROQ_API_KEY")
 
 
 def detect_language(text: str) -> str:
@@ -468,18 +474,18 @@ def language_instruction(lang: str) -> str:
         return (
             "The visitor wrote in Roman Urdu / Hinglish. "
             "Reply in simple Roman Urdu / Hinglish. "
-            "You are ANZO's consultant, not the visitor. "
+            "You are ANG's consultant, not the visitor. "
             "Ask exactly one short question."
         )
     if lang == "urdu":
         return (
             "The visitor wrote in Urdu. Reply in simple Urdu. "
-            "You are ANZO's consultant, not the visitor. "
+            "You are ANG's consultant, not the visitor. "
             "Ask exactly one short question."
         )
     return (
         "The visitor wrote in English. Reply in clear English. "
-        "You are ANZO's consultant, not the visitor. "
+        "You are ANG's consultant, not the visitor. "
         "Ask exactly one short question."
     )
 
@@ -539,9 +545,9 @@ def polish_reply(client: OpenAI, text: str, lang: str, user_message: str) -> str
     if not needs_language_fix and not needs_role_fix:
         return text
     instructions = [
-        "Rewrite this ANZO consultant reply.",
+        "Rewrite this ANG consultant reply.",
         "Keep the same meaning. Do not add prices, timelines, results, or new facts.",
-        "Speak as ANZO's consultant, never as the client.",
+        "Speak as ANG's consultant, never as the client.",
         "Keep exactly one question.",
         f"Visitor message: {user_message}",
     ]
@@ -569,10 +575,42 @@ def save_lead(data: dict) -> None:
         writer.writerow(data)
 
 
+def notify_team(data: dict) -> bool:
+    """Email the ANG team when a new lead arrives. Returns True if sent."""
+    host = get_secret("SMTP_HOST", "smtp.gmail.com")
+    port = int(get_secret("SMTP_PORT", "587") or 587)
+    user = get_secret("SMTP_USER")
+    password = get_secret("SMTP_PASSWORD")
+    to_email = get_secret("NOTIFY_EMAIL") or user
+    if not (user and password and to_email):
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = f"New ANG lead: {data.get('name') or data.get('company') or 'Website visitor'}"
+    msg["From"] = user
+    msg["To"] = to_email
+    msg.set_content(
+        "A new lead was submitted through the ANG chatbot.\n\n"
+        f"Time: {data.get('timestamp')}\n"
+        f"Name: {data.get('name')}\n"
+        f"Company: {data.get('company')}\n"
+        f"Email: {data.get('email')}\n"
+        f"Phone / WhatsApp: {data.get('phone')}\n"
+        f"Main problem: {data.get('problem')}\n\n"
+        "----- Conversation -----\n"
+        f"{data.get('notes')}\n"
+    )
+    with smtplib.SMTP(host, port, timeout=20) as server:
+        server.starttls()
+        server.login(user, password)
+        server.send_message(msg)
+    return True
+
+
 def conversation_text(messages: list) -> str:
     lines = []
     for item in messages:
-        role = "Client" if item["role"] == "user" else "ANZO"
+        role = "Client" if item["role"] == "user" else "ANG"
         lines.append(f"{role}: {item['content']}")
     return "\n".join(lines)
 
@@ -596,17 +634,17 @@ user_only = [m for m in st.session_state.messages if m["role"] == "user"]
 show_landing = len(user_only) == 0
 
 st.markdown(
-    '<div class="anzo-top"><div class="anzo-mark">A</div><div class="anzo-brand">ANZO</div></div>',
+    '<div class="ang-top"><div class="ang-mark">A</div><div class="ang-brand">ANG</div></div>',
     unsafe_allow_html=True,
 )
 
 if show_landing:
     hero_html = (
-        '<div class="anzo-hero">'
-        f'<div class="anzo-logo">{LOGO_SVG}</div>'
-        '<div class="anzo-hello">Hi, welcome to ANZO</div>'
-        '<div class="anzo-title">Can I help you with anything?</div>'
-        '<div class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</div>'
+        '<div class="ang-hero">'
+        f'<div class="ang-logo">{LOGO_SVG}</div>'
+        '<div class="ang-hello">Hi, welcome to ANG</div>'
+        '<div class="ang-title">Can I help you with anything?</div>'
+        '<div class="ang-sub">Tell us the business problem. We will help you find the right system to fix it.</div>'
         '</div>'
     )
     st.markdown(hero_html, unsafe_allow_html=True)
@@ -626,7 +664,7 @@ else:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-user_message = st.chat_input("Ask ANZO anything...")
+user_message = st.chat_input("Ask ANG anything...")
 if st.session_state.queued:
     user_message = st.session_state.queued
     st.session_state.queued = None
@@ -657,14 +695,14 @@ if user_message:
     except Exception:
         reply = (
             "Sorry, I cannot reply right now. Please try again in a moment "
-            "or contact the ANZO team directly."
+            "or contact the ANG team directly."
         )
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
 
 if not show_landing:
-    with st.expander("Contact ANZO team", expanded=False):
+    with st.expander("Contact ANG team", expanded=False):
         st.caption("Optional. Share your details when you are ready.")
         with st.form("lead_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
@@ -675,20 +713,32 @@ if not show_landing:
                 company = st.text_input("Company")
                 phone = st.text_input("Phone / WhatsApp")
             problem = st.text_area("Main problem", height=70)
-            submitted = st.form_submit_button("Send to ANZO")
+            submitted = st.form_submit_button("Send to ANG")
             if submitted:
                 if not (name or email or phone):
                     st.warning("Please enter a name, email, or phone number.")
                 else:
-                    save_lead(
-                        {
-                            "timestamp": datetime.now().isoformat(timespec="seconds"),
-                            "name": name.strip(),
-                            "company": company.strip(),
-                            "email": email.strip(),
-                            "phone": phone.strip(),
-                            "problem": problem.strip(),
-                            "notes": conversation_text(st.session_state.messages),
-                        }
-                    )
-                    st.success("Thanks. Your details have been saved.")
+                    lead = {
+                        "timestamp": datetime.now().isoformat(timespec="seconds"),
+                        "name": name.strip(),
+                        "company": company.strip(),
+                        "email": email.strip(),
+                        "phone": phone.strip(),
+                        "problem": problem.strip(),
+                        "notes": conversation_text(st.session_state.messages),
+                    }
+                    try:
+                        save_lead(lead)
+                    except Exception:
+                        pass
+                    try:
+                        sent = notify_team(lead)
+                    except Exception:
+                        sent = False
+                    if sent:
+                        st.success("Thanks. Your details have been sent to the ANG team.")
+                    else:
+                        st.warning(
+                            "Your details were noted, but we could not notify the team "
+                            "automatically. Please contact ANG directly."
+                        )
