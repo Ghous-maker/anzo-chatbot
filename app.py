@@ -337,8 +337,8 @@ st.markdown(CSS, unsafe_allow_html=True)
 PRIMARY_MODEL = "openai/gpt-oss-20b"
 FALLBACK_MODELS = [
     PRIMARY_MODEL,
+    "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
-    "gemma2-9b-it",
 ]
 LEADS_FILE = Path("ang_leads.csv")
 
@@ -377,10 +377,12 @@ CONSULTING METHOD:
 5. Ask exactly one next question.
 
 RESPONSE SHAPE:
-- Sentence 1: Restate the visitor's problem. Do not add new facts.
-- Sentence 2: Recommend the ANG solution and what it would do.
-- Sentence 3: Business benefit without fake percentages, case studies, or guarantees.
-- Sentence 4: Exactly one short question.
+- First reply to a new problem: 4 short sentences.
+  Sentence 1 restates the visitor's problem without adding facts.
+  Sentence 2 recommends the ANG solution and what it would do.
+  Sentence 3 gives the business benefit without fake percentages, case studies, or guarantees.
+  Sentence 4 is exactly one short question.
+- Later replies: 2 to 3 short sentences, answer what the visitor said, then exactly one question.
 
 LANGUAGE:
 - Match the visitor's latest message.
@@ -393,6 +395,12 @@ QUESTION RULE:
 - Ask for only one piece of information.
 - Never join two requests with and, or, aur, ya, or a comma list.
 - Never use more than one question mark.
+
+QUALIFICATION AND NEXT STEP:
+- After the problem and goal are clear, learn one thing at a time: business type, current tools or process, what they want built, timeline.
+- Never ask for the same information twice. Use what the visitor already said.
+- If the visitor asks about price, timeline, how to start, or shows clear interest, or after about 3 exchanges, tell them they can share their name and WhatsApp or email in the "Contact ANG team" section below the chat so the ANG team can review and follow up. Then end with exactly one question such as whether they would like the ANG team to contact them.
+- Never promise results, pricing, timelines, or capabilities that were not confirmed.
 
 PRICING / TIMELINE:
 - Never invent a price or deadline.
@@ -433,8 +441,8 @@ ROMAN_MARKERS = {
     "aapki", "apki", "hum", "hamari", "lekin", "magar", "nahi", "nahin",
     "chahiye", "karna", "karte", "karti", "hota", "hoti", "wala", "wali",
     "yeh", "ye", "woh", "wo", "abhi", "kitna", "kitni", "kaise", "kaisa",
-    "batao", "bataen", "team", "se", "ko", "ka", "ki", "ke", "mein", "main",
-    "aur", "ya", "liye", "baad", "pehle", "process", "leads", "lead"
+    "batao", "bataen", "se", "ko", "ka", "ki", "ke", "mein",
+    "aur", "ya", "liye", "baad", "pehle",
 }
 
 ROLE_LEAK = re.compile(
@@ -451,6 +459,18 @@ def get_secret(name: str, default: str = "") -> str:
         return str(st.secrets.get(name, default)).strip()
     except Exception:
         return default
+
+
+GENERIC_QUESTION = {
+    "english": "Could you tell me a bit more about the main problem you want to solve in your business?",
+    "roman_urdu": "Aap apne business ka woh main masla bata sakte hain jo aap hal karna chahte hain?",
+    "urdu": "کیا آپ اپنے کاروبار کا وہ بنیادی مسئلہ بتا سکتے ہیں جسے آپ حل کرنا چاہتے ہیں؟",
+}
+ERROR_MESSAGE = {
+    "english": "Sorry, I cannot reply right now. Please try again in a moment or use the Contact ANG team section below.",
+    "roman_urdu": "Maaf kijiye, abhi jawab nahi de sakta. Thori der baad try karein ya neeche Contact ANG team section use karein.",
+    "urdu": "معذرت، ابھی جواب نہیں دے سکتا۔ تھوڑی دیر بعد کوشش کریں یا نیچے Contact ANG team استعمال کریں۔",
+}
 
 
 def get_api_key() -> str:
@@ -502,10 +522,12 @@ def enforce_one_question(text: str) -> str:
     text = (text or "").strip()
     if not text:
         return text
-    marks = [i for i, ch in enumerate(text) if ch in "?؟"]
-    if not marks:
+    sentences = [x for x in re.split(r"(?<=[.!?؟])\s+", text) if x]
+    questions = [x for x in sentences if x.rstrip().endswith(("?", "؟"))]
+    if len(questions) <= 1:
         return text
-    return text[: marks[0] + 1].strip()
+    statements = [x for x in sentences if x not in questions]
+    return " ".join(statements + [questions[-1]]).strip()
 
 
 def get_client(api_key: str) -> OpenAI:
@@ -522,20 +544,29 @@ def call_model(client: OpenAI, messages: list, temperature: float = 0.2) -> str:
         if not model or model in tried:
             continue
         tried.append(model)
+        kwargs = dict(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=1200,
+        )
         try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=650,
-            )
-            return (response.choices[0].message.content or "").strip()
+            if "gpt-oss" in model:
+                try:
+                    response = client.chat.completions.create(
+                        extra_body={"reasoning_effort": "low"}, **kwargs
+                    )
+                except Exception:
+                    response = client.chat.completions.create(**kwargs)
+            else:
+                response = client.chat.completions.create(**kwargs)
+            text = (response.choices[0].message.content or "").strip()
+            if text:
+                return text
+            continue
         except Exception as error:
             last_error = error
-            err = str(error).lower()
-            if "model" in err or "404" in err or "not found" in err:
-                continue
-            raise
+            continue
     raise RuntimeError(str(last_error) if last_error else "No model available")
 
 
@@ -688,21 +719,15 @@ if user_message:
         reply = polish_reply(client, reply, lang, user_message)
         reply = enforce_one_question(reply)
         if not reply or ROLE_LEAK.search(reply):
-            reply = (
-                "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
-                "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
-            )
+            reply = GENERIC_QUESTION[lang]
     except Exception:
-        reply = (
-            "Sorry, I cannot reply right now. Please try again in a moment "
-            "or contact the ANG team directly."
-        )
+        reply = ERROR_MESSAGE[lang]
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
 
 if not show_landing:
-    with st.expander("Contact ANG team", expanded=False):
+    with st.expander("Contact ANG team", expanded=len(user_only) >= 3):
         st.caption("Optional. Share your details when you are ready.")
         with st.form("lead_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
