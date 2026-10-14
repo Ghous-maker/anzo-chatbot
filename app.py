@@ -21,12 +21,13 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    html, body, [class*="css"], .stApp {
-        font-family: Inter, Arial, sans-serif;
+    html, body, [class*="css"], .stApp, .stAppViewContainer, [data-testid="stAppViewContainer"] {
+        font-family: Inter, Arial, sans-serif !important;
         color-scheme: light !important;
+        color: #100c0a !important;
     }
-    .stApp {
-        background: linear-gradient(180deg, #f2eef2 0%, #e0dddc 55%, #b0b7c1 140%) !important;
+    .stApp, [data-testid="stAppViewContainer"] {
+        background: linear-gradient(180deg, #f2eef2 0%, #efe9ec 28%, #e0dddc 68%, #d5d1cf 100%) !important;
     }
     #MainMenu, footer, header { visibility: hidden !important; }
     .stDeployButton, .stAppDeployButton { display: none !important; }
@@ -39,47 +40,38 @@ st.markdown(
     [data-testid="manage-app-button"] { display: none !important; }
     .stApp > header { display: none !important; }
     .block-container {
-        padding: 1.4rem 1rem 7.5rem 1rem !important;
-        max-width: 880px;
+        padding: 18px 16px 110px 16px !important;
+        max-width: 920px;
     }
 
-    .anzo-shell {
-        background: rgba(242, 238, 242, 0.55);
-        border: 1px solid rgba(176, 183, 193, 0.45);
-        border-radius: 28px;
-        padding: 22px 18px 8px 18px;
-    }
     .anzo-top {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 28px;
+        margin: 4px 0 8px 2px;
     }
     .anzo-mark {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
         background: #100c0a;
         color: #f2eef2;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 16px;
+        font-size: 15px;
     }
     .anzo-brand {
-        color: #100c0a;
+        color: #100c0a !important;
         font-weight: 700;
         font-size: 15px;
     }
-    .anzo-hero {
-        text-align: center;
-        padding: 18px 10px 8px 10px;
-    }
+    .anzo-hero { text-align: center; padding: 28px 12px 8px 12px; }
     .anzo-logo {
-        width: 54px;
-        height: 54px;
-        margin: 0 auto 16px auto;
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 18px auto;
         border-radius: 16px;
         background: #100c0a;
         color: #f2eef2;
@@ -88,66 +80,103 @@ st.markdown(
         justify-content: center;
         font-size: 22px;
         font-weight: 700;
-        box-shadow: 0 10px 24px rgba(16, 12, 10, 0.18);
+        box-shadow: 0 12px 28px rgba(16, 12, 10, 0.16);
     }
     .anzo-hello {
         margin: 0;
-        color: #423630;
+        color: #423630 !important;
+        -webkit-text-fill-color: #423630 !important;
         font-size: 28px;
         font-weight: 500;
     }
     .anzo-title {
-        margin: 4px 0 0 0;
-        color: #100c0a;
+        margin: 6px 0 0 0;
+        color: #100c0a !important;
+        -webkit-text-fill-color: #100c0a !important;
         font-size: 34px;
-        line-height: 1.15;
+        line-height: 1.2;
         font-weight: 700;
+        background: none !important;
     }
     .anzo-sub {
-        max-width: 520px;
-        margin: 12px auto 0 auto;
-        color: #967e71;
+        max-width: 540px;
+        margin: 12px auto 22px auto;
+        color: #967e71 !important;
+        -webkit-text-fill-color: #967e71 !important;
         font-size: 15px;
         line-height: 1.6;
     }
+    h1, h2, h3, p, label, span {
+        color: #100c0a;
+    }
 
     [data-testid="stChatMessage"] {
-        background: rgba(255,255,255,0.88) !important;
-        border: 1px solid #e0dddc;
-        border-radius: 18px;
+        background: rgba(255,255,255,0.92) !important;
+        border: 1px solid #e0dddc !important;
+        border-radius: 18px !important;
         padding: 10px 12px !important;
-        margin: 8px 0 !important;
         box-shadow: 0 8px 20px rgba(16, 12, 10, 0.05);
     }
     [data-testid="stChatMessage"] p,
     [data-testid="stMarkdownContainer"] p {
         color: #100c0a !important;
+        -webkit-text-fill-color: #100c0a !important;
     }
 
-    div[data-testid="stHorizontalBlock"] button {
+    div[data-testid="stHorizontalBlock"] > div button {
         background: #ffffff !important;
         color: #100c0a !important;
+        -webkit-text-fill-color: #100c0a !important;
         border: 1px solid #e0dddc !important;
-        border-radius: 18px !important;
-        min-height: 132px !important;
-        text-align: left !important;
+        border-radius: 20px !important;
+        min-height: 158px !important;
+        height: 158px !important;
         white-space: pre-wrap !important;
-        font-weight: 600 !important;
-        box-shadow: 0 10px 24px rgba(16, 12, 10, 0.06) !important;
-        padding: 16px !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        text-align: left !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding: 18px 16px 16px 16px !important;
+        box-shadow: 0 10px 28px rgba(16, 12, 10, 0.06) !important;
+        font-size: 15px !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
     }
-    div[data-testid="stHorizontalBlock"] button:hover {
+    div[data-testid="stHorizontalBlock"] > div button::before {
+        content: "";
+        display: block;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background-color: #100c0a;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 18px 18px;
+        margin-bottom: 14px;
+    }
+    div[data-testid="stHorizontalBlock"] > div:nth-child(1) button::before {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23f2eef2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M4 14l9-9'/><path d='M8 5h5v5'/></svg>");
+    }
+    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button::before {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23f2eef2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M4 9a5 5 0 0 1 8-4'/><path d='M14 9a5 5 0 0 1-8 4'/><path d='M12 3h3v3'/><path d='M6 15H3v-3'/></svg>");
+    }
+    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button::before {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23f2eef2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3l3 3-8 8H4v-3l8-8z'/></svg>");
+    }
+    div[data-testid="stHorizontalBlock"] > div button:hover {
         border-color: #967e71 !important;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
     }
 
     [data-testid="stExpander"] {
-        background: rgba(255,255,255,0.8) !important;
+        background: rgba(255,255,255,0.88) !important;
         border: 1px solid #e0dddc !important;
         border-radius: 16px !important;
     }
     .stTextInput label, .stTextArea label, [data-testid="stExpander"] p, [data-testid="stExpander"] span {
         color: #423630 !important;
+        -webkit-text-fill-color: #423630 !important;
     }
     .stTextInput input, .stTextArea textarea {
         background: #f2eef2 !important;
@@ -156,30 +185,41 @@ st.markdown(
         border-radius: 12px !important;
     }
 
-    .stButton > button,
     .stFormSubmitButton button {
         background: linear-gradient(135deg, #423630 0%, #967e71 100%) !important;
         color: #f2eef2 !important;
         border: 0 !important;
         border-radius: 999px !important;
         font-weight: 700 !important;
-        padding: 0.55rem 1.15rem !important;
-        box-shadow: 0 8px 18px rgba(66, 54, 48, 0.25) !important;
     }
 
+    [data-testid="stBottom"],
+    [data-testid="stBottomBlockContainer"],
+    .stChatFloatingInputContainer {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
     [data-testid="stChatInput"] {
         background: transparent !important;
-        border-top: 0 !important;
+        padding-bottom: 18px !important;
     }
     [data-testid="stChatInput"] textarea {
         background: #ffffff !important;
         color: #100c0a !important;
+        -webkit-text-fill-color: #100c0a !important;
         border: 1px solid #e0dddc !important;
         border-radius: 999px !important;
-        padding-left: 16px !important;
+        caret-color: #100c0a !important;
+    }
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #967e71 !important;
+        -webkit-text-fill-color: #967e71 !important;
+        opacity: 1 !important;
     }
     [data-testid="stChatInput"] button {
-        background: linear-gradient(135deg, #967e71, #423630) !important;
+        background: linear-gradient(135deg, #967e71 0%, #423630 100%) !important;
         color: #f2eef2 !important;
         border: 0 !important;
         border-radius: 999px !important;
@@ -258,23 +298,20 @@ Visitor: Meri real estate agency hai. Website aur WhatsApp se leads aati hain, l
 You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late milta hai, is liye potential clients nikal jate hain. ANZO iske liye WhatsApp aur website ka connected AI lead agent bana sakta hai jo turant jawab de, zaroori details le, qualify kare, aur serious leads aapki team tak bheje. Is se missed follow-ups kam ho sakte hain aur team ko sirf ready conversations milengi. Abhi yeh leads aap kahan save karte hain?
 """
 
-WELCOME_MESSAGE = (
-    "I'm ANZO's AI business consultant. Tell me what you want to build, "
-    "automate, or improve in your business — or where your team is losing "
-    "time or missing leads."
-)
-
 SUGGESTIONS = [
     (
         "Missed leads",
+        "Late WhatsApp replies",
         "Website and WhatsApp leads come in, but my team replies late and we miss customers.",
     ),
     (
         "Repetitive work",
+        "Too much manual follow-up",
         "My team spends too much time on repetitive manual work and follow-ups.",
     ),
     (
         "Custom system",
+        "Website, app or dashboard",
         "I need a custom website, dashboard, or software for my business, but I am not sure what to build first.",
     ),
 ]
@@ -435,22 +472,18 @@ def queue_suggestion(text: str) -> None:
 
 
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": WELCOME_MESSAGE}
-    ]
+    st.session_state.messages = []
 if "queued" not in st.session_state:
     st.session_state.queued = None
 
-user_only = [m for m in st.session_state.messages if m["role"] == "user"]
-show_landing = len(user_only) == 0
+show_landing = not any(m["role"] == "user" for m in st.session_state.messages)
 
 st.markdown(
     """
-    <div class="anzo-shell">
-      <div class="anzo-top">
-        <div class="anzo-mark">A</div>
-        <div class="anzo-brand">ANZO</div>
-      </div>
+    <div class="anzo-top">
+      <div class="anzo-mark">A</div>
+      <div class="anzo-brand">ANZO</div>
+    </div>
     """,
     unsafe_allow_html=True
 )
@@ -461,17 +494,17 @@ if show_landing:
         <div class="anzo-hero">
           <div class="anzo-logo">A</div>
           <p class="anzo-hello">Hi, welcome to ANZO</p>
-          <h1 class="anzo-title">Can I help you with anything?</h1>
-          <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
+          <p class="anzo-title">Can I help you with anything?</p>
+          <p class="anzo-sub">Ready to help you fix missed leads, repetitive work, or build the right system. Let's get started.</p>
         </div>
         """,
         unsafe_allow_html=True
     )
-    cols = st.columns(3)
-    for col, (title, prompt) in zip(cols, SUGGESTIONS):
+    cols = st.columns(3, gap="medium")
+    for col, (title, subtitle, prompt) in zip(cols, SUGGESTIONS):
         with col:
             st.button(
-                f"{title}\n\n{prompt}",
+                f"{title}\n{subtitle}",
                 use_container_width=True,
                 on_click=queue_suggestion,
                 args=(prompt,),
@@ -480,8 +513,6 @@ else:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 user_message = st.chat_input("Ask ANZO anything...")
 if st.session_state.queued:
@@ -492,13 +523,11 @@ api_key = get_api_key()
 
 if user_message:
     st.session_state.messages.append({"role": "user", "content": user_message})
-
     lang = detect_language(user_message)
     api_messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "system", "content": language_instruction(lang)},
     ] + st.session_state.messages
-
     try:
         if not api_key:
             raise RuntimeError("missing key")
@@ -516,7 +545,6 @@ if user_message:
             "Sorry, I cannot reply right now. Please try again in a moment "
             "or contact the ANZO team directly."
         )
-
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
 
