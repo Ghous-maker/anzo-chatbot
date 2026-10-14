@@ -92,19 +92,20 @@ html, body, [class*="css"], .stApp {
     max-width: 900px;
 }
 
-/* ---------- Shell ---------- */
-.anzo-shell {
-    background: linear-gradient(160deg, rgba(244,239,247,0.75), rgba(243,229,236,0.65));
-    border: 1px solid rgba(214, 205, 209, 0.8);
+/* ---------- Shell (the page container itself is the card) ---------- */
+.block-container {
+    background: linear-gradient(160deg, rgba(244,239,247,0.80), rgba(243,229,236,0.70)) !important;
+    border: 1px solid rgba(214, 205, 209, 0.85);
     border-radius: 34px;
-    padding: 18px 20px 10px 20px;
     box-shadow: 0 20px 50px rgba(86, 86, 86, 0.07);
+    margin: 1.2rem auto 7rem auto !important;
+    padding: 1.4rem 1.6rem 1.8rem 1.6rem !important;
 }
 .anzo-top {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 26px;
 }
 .anzo-mark {
     width: 38px;
@@ -127,7 +128,8 @@ html, body, [class*="css"], .stApp {
 /* ---------- Hero ---------- */
 .anzo-hero {
     text-align: center;
-    padding: 24px 10px 12px 10px;
+    width: 100%;
+    padding: 10px 10px 0 10px;
 }
 .anzo-logo {
     width: 76px;
@@ -140,41 +142,41 @@ html, body, [class*="css"], .stApp {
     justify-content: center;
     box-shadow: 0 14px 30px rgba(64, 64, 64, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
 }
-.anzo-hello {
+div.anzo-hello {
     margin: 0;
-    color: var(--c-muted);
-    font-size: 30px;
-    font-weight: 600;
+    color: #b2a3a4 !important;
+    font-size: 30px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
 }
-.anzo-title {
+div.anzo-title {
     margin: 2px 0 0 0;
-    color: var(--c-text);
-    font-size: 36px;
-    line-height: 1.15;
-    font-weight: 700;
+    color: #565656 !important;
+    font-size: 38px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
     letter-spacing: -0.5px;
 }
-.anzo-sub {
+div.anzo-sub {
     max-width: 480px;
     margin: 14px auto 0 auto;
-    color: #8f8588;
-    font-size: 15px;
-    line-height: 1.6;
+    color: #8f8588 !important;
+    font-size: 15px !important;
+    line-height: 1.6 !important;
 }
 
 /* ---------- Suggestion cards ---------- */
 div[data-testid="stHorizontalBlock"] button {
-    background: rgba(254, 254, 254, 0.85) !important;
+    background: rgba(254, 254, 254, 0.88) !important;
     color: var(--c-ink) !important;
-    border: 1px solid rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
     border-radius: 22px !important;
-    min-height: 190px !important;
+    min-height: 175px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
     text-align: left !important;
-    white-space: normal !important;
     padding: 18px !important;
     box-shadow: 0 10px 28px rgba(86, 86, 86, 0.08) !important;
     transition: transform .15s ease, box-shadow .15s ease;
@@ -182,6 +184,7 @@ div[data-testid="stHorizontalBlock"] button {
 div[data-testid="stHorizontalBlock"] button::before {
     content: "";
     display: block;
+    order: 0;
     width: 48px;
     height: 48px;
     border-radius: 14px;
@@ -192,24 +195,39 @@ div[data-testid="stHorizontalBlock"] button::before {
     margin-bottom: 18px;
     flex-shrink: 0;
 }
-div[data-testid="stHorizontalBlock"] > div:nth-child(1) button::before { background-image: url("__ICON_LEADS__"); }
-div[data-testid="stHorizontalBlock"] > div:nth-child(2) button::before { background-image: url("__ICON_AUTOMATION__"); }
-div[data-testid="stHorizontalBlock"] > div:nth-child(3) button::before { background-image: url("__ICON_SYSTEM__"); }
-
+div[data-testid="stHorizontalBlock"] button > div,
+div[data-testid="stHorizontalBlock"] button [data-testid="stMarkdownContainer"] {
+    order: 1;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+}
 div[data-testid="stHorizontalBlock"] button p {
+    display: block !important;
     margin: 0 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     text-align: left !important;
     color: var(--c-ink) !important;
     font-size: 15px !important;
     font-weight: 600 !important;
     line-height: 1.35 !important;
 }
-div[data-testid="stHorizontalBlock"] button p:last-child:not(:first-child) {
-    margin-top: 6px !important;
-    color: #8f8588 !important;
-    font-size: 12.5px !important;
-    font-weight: 400 !important;
+div[data-testid="stHorizontalBlock"] button::after {
+    order: 2;
+    display: block;
+    margin-top: 6px;
+    color: #8f8588;
+    font-size: 12.5px;
+    font-weight: 400;
 }
+div[data-testid="stHorizontalBlock"] > div:nth-child(1) button::before { background-image: url("__ICON_LEADS__"); }
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) button::before { background-image: url("__ICON_AUTOMATION__"); }
+div[data-testid="stHorizontalBlock"] > div:nth-child(3) button::before { background-image: url("__ICON_SYSTEM__"); }
+div[data-testid="stHorizontalBlock"] > div:nth-child(1) button::after { content: "WhatsApp & website inquiries"; }
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) button::after { content: "Automation & follow-ups"; }
+div[data-testid="stHorizontalBlock"] > div:nth-child(3) button::after { content: "Dashboards, apps & systems"; }
 div[data-testid="stHorizontalBlock"] button:hover {
     transform: translateY(-2px);
     box-shadow: 0 16px 34px rgba(86, 86, 86, 0.13) !important;
@@ -226,7 +244,7 @@ div[data-testid="stHorizontalBlock"] button:hover {
     box-shadow: 0 8px 22px rgba(86, 86, 86, 0.06);
 }
 [data-testid="stChatMessage"] p,
-[data-testid="stMarkdownContainer"] p {
+[data-testid="stExpander"] [data-testid="stMarkdownContainer"] p {
     color: var(--c-ink) !important;
     line-height: 1.6;
 }
@@ -578,45 +596,35 @@ user_only = [m for m in st.session_state.messages if m["role"] == "user"]
 show_landing = len(user_only) == 0
 
 st.markdown(
-    """
-    <div class="anzo-shell">
-      <div class="anzo-top">
-        <div class="anzo-mark">A</div>
-        <div class="anzo-brand">ANZO</div>
-      </div>
-    """,
-    unsafe_allow_html=True
+    '<div class="anzo-top"><div class="anzo-mark">A</div><div class="anzo-brand">ANZO</div></div>',
+    unsafe_allow_html=True,
 )
 
 if show_landing:
-    st.markdown(
-        f"""
-        <div class="anzo-hero">
-          <div class="anzo-logo">{LOGO_SVG}</div>
-          <p class="anzo-hello">Hi, welcome to ANZO</p>
-          <h1 class="anzo-title">Can I help you with anything?</h1>
-          <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
-        </div>
-        """,
-        unsafe_allow_html=True
+    hero_html = (
+        '<div class="anzo-hero">'
+        f'<div class="anzo-logo">{LOGO_SVG}</div>'
+        '<div class="anzo-hello">Hi, welcome to ANZO</div>'
+        '<div class="anzo-title">Can I help you with anything?</div>'
+        '<div class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</div>'
+        '</div>'
     )
-    st.markdown("<div style='height:36px'></div>", unsafe_allow_html=True)
+    st.markdown(hero_html, unsafe_allow_html=True)
+    st.markdown("<div style='height:34px'></div>", unsafe_allow_html=True)
     cols = st.columns(3)
-    for col, (title, subtitle, prompt) in zip(cols, SUGGESTIONS):
+    for i, (col, (title, subtitle, prompt)) in enumerate(zip(cols, SUGGESTIONS)):
         with col:
             st.button(
-                f"{title}\n\n{subtitle}",
+                title,
                 use_container_width=True,
                 on_click=queue_suggestion,
                 args=(prompt,),
-                key=f"sugg_{title}",
+                key=f"sugg_{i}",
             )
 else:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 user_message = st.chat_input("Ask ANZO anything...")
 if st.session_state.queued:
