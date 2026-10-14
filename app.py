@@ -12,24 +12,21 @@ load_dotenv()
 
 st.set_page_config(
     page_title="ANZO | AI Business Consultant",
-    page_icon="💬",
+    page_icon="💼",
     layout="centered"
 )
 
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"], .stApp {
         font-family: Inter, Arial, sans-serif;
         color-scheme: light !important;
     }
     .stApp {
-        background:
-            radial-gradient(1100px 620px at 6% 10%, rgba(196,190,224,0.45), transparent 62%),
-            radial-gradient(1000px 620px at 94% 16%, rgba(240,200,190,0.42), transparent 58%),
-            linear-gradient(160deg, #f2eef2 0%, #efe9ee 38%, #ece5e2 62%, #e0dddc 100%) !important;
+        background: linear-gradient(180deg, #f2eef2 0%, #e0dddc 55%, #b0b7c1 140%) !important;
     }
     #MainMenu, footer, header { visibility: hidden !important; }
     .stDeployButton, .stAppDeployButton { display: none !important; }
@@ -41,103 +38,151 @@ st.markdown(
     [data-testid="stAppToolbar"],
     [data-testid="manage-app-button"] { display: none !important; }
     .stApp > header { display: none !important; }
-
     .block-container {
-        padding: 1rem 1rem 7.2rem 1rem !important;
-        max-width: 820px;
+        padding: 1.4rem 1rem 7.5rem 1rem !important;
+        max-width: 880px;
     }
 
-    .halo-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .halo-top .logo-mini {
-        width: 38px; height: 38px; border-radius: 12px;
-        background: linear-gradient(145deg, #2b221d, #100c0a);
-        color: #fff; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 17px; box-shadow: 0 8px 18px rgba(16,12,10,0.22);
+    .anzo-shell {
+        background: rgba(242, 238, 242, 0.55);
+        border: 1px solid rgba(176, 183, 193, 0.45);
+        border-radius: 28px;
+        padding: 22px 18px 8px 18px;
     }
-    .halo-top .brand { font-weight: 800; color: #100c0a; font-size: 17px; letter-spacing: 0.01em; }
-
-    .halo-hero { text-align: center; padding: 26px 10px 4px 10px; }
-    .halo-logo {
-        width: 74px; height: 74px; border-radius: 22px;
-        background: linear-gradient(145deg, #2b221d, #100c0a);
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 34px; box-shadow: 0 16px 34px rgba(16,12,10,0.28);
+    .anzo-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
     }
-    .halo-hi { color: #967e71; font-size: 21px; font-weight: 600; margin: 18px 0 0 0; }
-    .halo-title { color: #100c0a; font-size: 34px; line-height: 1.18; font-weight: 800; margin: 4px 0 0 0; }
-    .halo-sub { color: #967e71; font-size: 15px; line-height: 1.55; max-width: 540px; margin: 12px auto 0; }
-
-    .halo-card button {
-        width: 100% !important;
-        background: #fbf9f8 !important;
-        border: 1px solid #e8e1df !important;
-        border-radius: 16px !important;
-        padding: 16px 16px !important;
-        text-align: left !important;
-        color: #100c0a !important;
-        font-weight: 700 !important;
-        font-size: 14.5px !important;
-        line-height: 1.35 !important;
-        box-shadow: 0 10px 26px rgba(66,54,48,0.08) !important;
-        min-height: 92px !important;
+    .anzo-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: #100c0a;
+        color: #f2eef2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
     }
-    .halo-card button:hover {
-        border-color: #967e71 !important;
-        transform: translateY(-2px);
-        box-shadow: 0 14px 30px rgba(66,54,48,0.14) !important;
+    .anzo-brand {
+        color: #100c0a;
+        font-weight: 700;
+        font-size: 15px;
     }
-    .halo-card .cap { color: #967e71; font-size: 12.5px; font-weight: 500; margin: 6px 2px 0; text-align: left; }
+    .anzo-hero {
+        text-align: center;
+        padding: 18px 10px 8px 10px;
+    }
+    .anzo-logo {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 16px auto;
+        border-radius: 16px;
+        background: #100c0a;
+        color: #f2eef2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(16, 12, 10, 0.18);
+    }
+    .anzo-hello {
+        margin: 0;
+        color: #423630;
+        font-size: 28px;
+        font-weight: 500;
+    }
+    .anzo-title {
+        margin: 4px 0 0 0;
+        color: #100c0a;
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 700;
+    }
+    .anzo-sub {
+        max-width: 520px;
+        margin: 12px auto 0 auto;
+        color: #967e71;
+        font-size: 15px;
+        line-height: 1.6;
+    }
 
     [data-testid="stChatMessage"] {
-        background: rgba(255,255,255,0.96) !important;
-        border: 1px solid #ece5e2 !important;
-        border-radius: 16px !important;
-        padding: 10px 13px !important;
+        background: rgba(255,255,255,0.88) !important;
+        border: 1px solid #e0dddc;
+        border-radius: 18px;
+        padding: 10px 12px !important;
         margin: 8px 0 !important;
-        box-shadow: 0 8px 22px rgba(66,54,48,0.07) !important;
+        box-shadow: 0 8px 20px rgba(16, 12, 10, 0.05);
     }
-    [data-testid="stChatMessage"] p { color: #100c0a !important; }
+    [data-testid="stChatMessage"] p,
+    [data-testid="stMarkdownContainer"] p {
+        color: #100c0a !important;
+    }
 
-    [data-testid="stChatInput"] { background: transparent !important; }
-    [data-testid="stChatInput"] textarea {
+    div[data-testid="stHorizontalBlock"] button {
         background: #ffffff !important;
         color: #100c0a !important;
-        border: 1px solid #e8e1df !important;
-        border-radius: 999px !important;
-        box-shadow: 0 12px 28px rgba(66,54,48,0.12) !important;
+        border: 1px solid #e0dddc !important;
+        border-radius: 18px !important;
+        min-height: 132px !important;
+        text-align: left !important;
+        white-space: pre-wrap !important;
+        font-weight: 600 !important;
+        box-shadow: 0 10px 24px rgba(16, 12, 10, 0.06) !important;
+        padding: 16px !important;
     }
-    [data-testid="stChatInput"] textarea::placeholder { color: #b0b7c1 !important; }
-    [data-testid="stChatInput"] button {
-        background: linear-gradient(135deg, #967e71 0%, #e08963 100%) !important;
-        border-radius: 999px !important;
-        color: #ffffff !important;
-        border: 0 !important;
-        box-shadow: 0 8px 20px rgba(150,126,113,0.4) !important;
+    div[data-testid="stHorizontalBlock"] button:hover {
+        border-color: #967e71 !important;
+        transform: translateY(-1px);
     }
 
     [data-testid="stExpander"] {
-        background: #fbf9f8 !important;
-        border: 1px solid #e8e1df !important;
+        background: rgba(255,255,255,0.8) !important;
+        border: 1px solid #e0dddc !important;
         border-radius: 16px !important;
     }
-    [data-testid="stExpander"] p, [data-testid="stExpander"] label, [data-testid="stExpander"] span {
+    .stTextInput label, .stTextArea label, [data-testid="stExpander"] p, [data-testid="stExpander"] span {
         color: #423630 !important;
     }
-    .stTextInput label, .stTextArea label { color: #423630 !important; font-weight: 600 !important; }
     .stTextInput input, .stTextArea textarea {
-        background: #ffffff !important;
+        background: #f2eef2 !important;
         color: #100c0a !important;
-        border: 1px solid #ddd3d0 !important;
+        border: 1px solid #b0b7c1 !important;
         border-radius: 12px !important;
     }
+
+    .stButton > button,
     .stFormSubmitButton button {
-        background: linear-gradient(135deg, #967e71 0%, #e08963 100%) !important;
-        color: #ffffff !important;
+        background: linear-gradient(135deg, #423630 0%, #967e71 100%) !important;
+        color: #f2eef2 !important;
         border: 0 !important;
         border-radius: 999px !important;
         font-weight: 700 !important;
-        padding: 0.55rem 1.4rem !important;
-        box-shadow: 0 10px 22px rgba(150,126,113,0.38) !important;
+        padding: 0.55rem 1.15rem !important;
+        box-shadow: 0 8px 18px rgba(66, 54, 48, 0.25) !important;
+    }
+
+    [data-testid="stChatInput"] {
+        background: transparent !important;
+        border-top: 0 !important;
+    }
+    [data-testid="stChatInput"] textarea {
+        background: #ffffff !important;
+        color: #100c0a !important;
+        border: 1px solid #e0dddc !important;
+        border-radius: 999px !important;
+        padding-left: 16px !important;
+    }
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #967e71, #423630) !important;
+        color: #f2eef2 !important;
+        border: 0 !important;
+        border-radius: 999px !important;
     }
     </style>
     """,
@@ -220,9 +265,18 @@ WELCOME_MESSAGE = (
 )
 
 SUGGESTIONS = [
-    ("⚡", "Automate repetitive work", "Stop wasting team hours"),
-    ("📈", "Stop losing leads", "AI follow-up system"),
-    ("🛠️", "Build a website or app", "Custom software"),
+    (
+        "Missed leads",
+        "Website and WhatsApp leads come in, but my team replies late and we miss customers.",
+    ),
+    (
+        "Repetitive work",
+        "My team spends too much time on repetitive manual work and follow-ups.",
+    ),
+    (
+        "Custom system",
+        "I need a custom website, dashboard, or software for my business, but I am not sure what to build first.",
+    ),
 ]
 
 ROMAN_MARKERS = {
@@ -376,124 +430,122 @@ def conversation_text(messages: list) -> str:
     return "\n".join(lines)
 
 
+def queue_suggestion(text: str) -> None:
+    st.session_state.queued = text
+
+
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": WELCOME_MESSAGE}
     ]
+if "queued" not in st.session_state:
+    st.session_state.queued = None
+
+user_only = [m for m in st.session_state.messages if m["role"] == "user"]
+show_landing = len(user_only) == 0
 
 st.markdown(
     """
-    <div class="halo-top">
-      <span class="logo-mini">💬</span>
-      <span class="brand">ANZO</span>
-    </div>
-    <div class="halo-hero">
-      <span class="halo-logo">🤝</span>
-      <p class="halo-hi">Hi there</p>
-      <h1 class="halo-title">Can I help you with anything?</h1>
-      <p class="halo-sub">Tell me the problem in your business — slow replies, manual work,
-      or missing leads. I will help you find the right system to fix it.</p>
-    </div>
+    <div class="anzo-shell">
+      <div class="anzo-top">
+        <div class="anzo-mark">A</div>
+        <div class="anzo-brand">ANZO</div>
+      </div>
     """,
     unsafe_allow_html=True
 )
 
-is_fresh = len(st.session_state.messages) == 1
-
-if is_fresh:
-    c1, c2, c3 = st.columns(3)
-    clicked = None
-    with c1:
-        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
-        if st.button(f"{SUGGESTIONS[0][0]}  {SUGGESTIONS[0][1]}", use_container_width=True):
-            clicked = SUGGESTIONS[0][1]
-        st.markdown(f'<div class="cap">{SUGGESTIONS[0][2]}</div></div>', unsafe_allow_html=True)
-    with c2:
-        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
-        if st.button(f"{SUGGESTIONS[1][0]}  {SUGGESTIONS[1][1]}", use_container_width=True):
-            clicked = SUGGESTIONS[1][1]
-        st.markdown(f'<div class="cap">{SUGGESTIONS[1][2]}</div></div>', unsafe_allow_html=True)
-    with c3:
-        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
-        if st.button(f"{SUGGESTIONS[2][0]}  {SUGGESTIONS[2][1]}", use_container_width=True):
-            clicked = SUGGESTIONS[2][1]
-        st.markdown(f'<div class="cap">{SUGGESTIONS[2][2]}</div></div>', unsafe_allow_html=True)
+if show_landing:
+    st.markdown(
+        """
+        <div class="anzo-hero">
+          <div class="anzo-logo">A</div>
+          <p class="anzo-hello">Hi, welcome to ANZO</p>
+          <h1 class="anzo-title">Can I help you with anything?</h1>
+          <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    cols = st.columns(3)
+    for col, (title, prompt) in zip(cols, SUGGESTIONS):
+        with col:
+            st.button(
+                f"{title}\n\n{prompt}",
+                use_container_width=True,
+                on_click=queue_suggestion,
+                args=(prompt,),
+            )
 else:
-    for message in st.session_state.messages[1:]:
+    for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-user_message = clicked or st.chat_input("Ask ANZO anything...")
+st.markdown("</div>", unsafe_allow_html=True)
+
+user_message = st.chat_input("Ask ANZO anything...")
+if st.session_state.queued:
+    user_message = st.session_state.queued
+    st.session_state.queued = None
+
 api_key = get_api_key()
 
 if user_message:
     st.session_state.messages.append({"role": "user", "content": user_message})
+
+    lang = detect_language(user_message)
+    api_messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": language_instruction(lang)},
+    ] + st.session_state.messages
+
+    try:
+        if not api_key:
+            raise RuntimeError("missing key")
+        client = get_client(api_key)
+        reply = call_model(client, api_messages)
+        reply = polish_reply(client, reply, lang, user_message)
+        reply = enforce_one_question(reply)
+        if not reply or ROLE_LEAK.search(reply):
+            reply = (
+                "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
+                "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
+            )
+    except Exception:
+        reply = (
+            "Sorry, I cannot reply right now. Please try again in a moment "
+            "or contact the ANZO team directly."
+        )
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
 
-if len(st.session_state.messages) > 1:
-    last = st.session_state.messages[-1]
-    if last["role"] == "user":
-        lang = detect_language(last["content"])
-        api_messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "system", "content": language_instruction(lang)},
-        ] + st.session_state.messages[:-1]
-
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                try:
-                    if not api_key:
-                        raise RuntimeError("missing key")
-                    client = get_client(api_key)
-                    reply = call_model(client, api_messages)
-                    reply = polish_reply(client, reply, lang, last["content"])
-                    reply = enforce_one_question(reply)
-                    if not reply or ROLE_LEAK.search(reply):
-                        reply = (
-                            "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
-                            "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
-                        )
-                    st.markdown(reply)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": reply}
+if not show_landing:
+    with st.expander("Contact ANZO team", expanded=False):
+        st.caption("Optional. Share your details when you are ready.")
+        with st.form("lead_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                name = st.text_input("Name")
+                email = st.text_input("Email")
+            with col2:
+                company = st.text_input("Company")
+                phone = st.text_input("Phone / WhatsApp")
+            problem = st.text_area("Main problem", height=70)
+            submitted = st.form_submit_button("Send to ANZO")
+            if submitted:
+                if not (name or email or phone):
+                    st.warning("Please enter a name, email, or phone number.")
+                else:
+                    save_lead(
+                        {
+                            "timestamp": datetime.now().isoformat(timespec="seconds"),
+                            "name": name.strip(),
+                            "company": company.strip(),
+                            "email": email.strip(),
+                            "phone": phone.strip(),
+                            "problem": problem.strip(),
+                            "notes": conversation_text(st.session_state.messages),
+                        }
                     )
-                    st.rerun()
-                except Exception:
-                    fallback = (
-                        "Sorry, I cannot reply right now. Please try again in a moment "
-                        "or contact the ANZO team directly."
-                    )
-                    st.markdown(fallback)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": fallback}
-                    )
-                    st.rerun()
-
-with st.expander("Contact ANZO team", expanded=False):
-    st.caption("Optional. Share your details when you are ready.")
-    with st.form("lead_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            name = st.text_input("Name")
-            email = st.text_input("Email")
-        with col2:
-            company = st.text_input("Company")
-            phone = st.text_input("Phone / WhatsApp")
-        problem = st.text_area("Main problem", height=70)
-        submitted = st.form_submit_button("Send to ANZO")
-        if submitted:
-            if not (name or email or phone):
-                st.warning("Please enter a name, email, or phone number.")
-            else:
-                save_lead(
-                    {
-                        "timestamp": datetime.now().isoformat(timespec="seconds"),
-                        "name": name.strip(),
-                        "company": company.strip(),
-                        "email": email.strip(),
-                        "phone": phone.strip(),
-                        "problem": problem.strip(),
-                        "notes": conversation_text(st.session_state.messages),
-                    }
-                )
-                st.success("Thanks. Your details have been saved.")
+                    st.success("Thanks. Your details have been saved.")
