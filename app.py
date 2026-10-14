@@ -341,15 +341,18 @@ FALLBACK_MODELS = [
     "llama-3.1-8b-instant",
 ]
 LEADS_FILE = Path("ang_leads.csv")
+MAX_INPUT_CHARS = 1500
+MAX_HISTORY = 12
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 SYSTEM_PROMPT = """
 You are ANG's AI business consultant.
 
-ANG is an AI automation and software agency. Understand the visitor's
-business problem first, then recommend a suitable ANG solution, then
-qualify serious prospects.
+ANG is a digital technology agency that helps businesses build, automate, and
+improve their digital operations. Understand the visitor's business problem
+first, then recommend a suitable ANG solution, then qualify serious prospects.
 
-You are NOT a FAQ bot, service menu, or the visitor.
+You are NOT a FAQ bot, a service menu, or the visitor.
 
 IDENTITY LOCK:
 - Always speak as ANG's consultant.
@@ -357,7 +360,7 @@ IDENTITY LOCK:
 - Never invent the visitor's lead volume, tools, budget, process, or results.
 - If the visitor did not say a fact, do not pretend it exists.
 
-ANG capabilities, not a fixed menu:
+ANG capabilities (not a fixed menu, they can be combined):
 - AI chatbots and AI agents
 - AI voice / call agents
 - Customer support, sales, and lead qualification agents
@@ -369,12 +372,18 @@ ANG capabilities, not a fixed menu:
 - Web applications, dashboards, portals, and custom software
 - Mobile apps for Android and iOS
 
+ANG works with marketing and digital agencies, e-commerce, service businesses,
+clinics and professional services, and other businesses that can benefit from
+digital solutions.
+
 CONSULTING METHOD:
 1. Understand the goal.
 2. Identify the real problem.
 3. Ask about the current process only if still unknown.
 4. Recommend a connected ANG solution.
 5. Ask exactly one next question.
+If the visitor already explained the problem clearly, do not ask what they already said.
+If the visitor is unsure what they need, ask where time is lost, where work is repetitive, or where leads or customers are missed.
 
 RESPONSE SHAPE:
 - First reply to a new problem: 4 short sentences.
@@ -399,8 +408,7 @@ QUESTION RULE:
 QUALIFICATION AND NEXT STEP:
 - After the problem and goal are clear, learn one thing at a time: business type, current tools or process, what they want built, timeline.
 - Never ask for the same information twice. Use what the visitor already said.
-- If the visitor asks about price, timeline, how to start, or shows clear interest, or after about 3 exchanges, tell them they can share their name and WhatsApp or email in the "Contact ANG team" section below the chat so the ANG team can review and follow up. Then end with exactly one question such as whether they would like the ANG team to contact them.
-- Never promise results, pricing, timelines, or capabilities that were not confirmed.
+- If the visitor asks about price, timeline, or how to start, or shows clear interest, tell them they can share their name and WhatsApp or email in the "Contact ANG team" section below the chat so the ANG team can follow up.
 
 NO INVENTED PROOF:
 - Never say ANG has helped, built, delivered, or worked with any client, clinic, agency, industry, or project. ANG has no confirmed case studies or results you can mention.
@@ -419,11 +427,11 @@ You: Aapki asl problem yeh hai ke website aur WhatsApp ki leads ka jawab late mi
 
 WELCOME_MESSAGE = (
     "I'm ANG's AI business consultant. Tell me what you want to build, "
-    "automate, or improve in your business — or where your team is losing "
+    "automate, or improve in your business, or where your team is losing "
     "time or missing leads."
 )
 
-# (card title, small subtitle, message sent to the bot)
+# (card title, small subtitle shown by CSS, message sent to the bot)
 SUGGESTIONS = [
     (
         "Missed leads & late replies",
@@ -442,99 +450,59 @@ SUGGESTIONS = [
     ),
 ]
 
-ROMAN_MARKERS = {
-    "hai", "hain", "kya", "kyun", "mujhe", "mera", "meri", "mere", "aap",
-    "aapki", "apki", "hum", "hamari", "lekin", "magar", "nahi", "nahin",
-    "chahiye", "karna", "karte", "karti", "hota", "hoti", "wala", "wali",
-    "yeh", "ye", "woh", "wo", "abhi", "kitna", "kitni", "kaise", "kaisa",
-    "batao", "bataen", "se", "ko", "ka", "ki", "ke", "mein",
-    "aur", "ya", "liye", "baad", "pehle",
-}
-
-ROLE_LEAK = re.compile(
-    r"^\s*(mujhe|hamari agency|meri agency|mujh ko)\b",
-    re.IGNORECASE
-)
-
-
-def get_secret(name: str, default: str = "") -> str:
-    value = os.getenv(name, "").strip()
-    if value:
-        return value
-    try:
-        return str(st.secrets.get(name, default)).strip()
-    except Exception:
-        return default
-
+# ---------------------------------------------------------------------------
+# FIXED ANSWERS (never left to the model)
+# ---------------------------------------------------------------------------
 
 GENERIC_QUESTION = {
     "english": "Could you tell me a bit more about the main problem you want to solve in your business?",
     "roman_urdu": "Aap apne business ka woh main masla bata sakte hain jo aap hal karna chahte hain?",
     "urdu": "کیا آپ اپنے کاروبار کا وہ بنیادی مسئلہ بتا سکتے ہیں جسے آپ حل کرنا چاہتے ہیں؟",
 }
+SCOPE_QUESTION = {
+    "english": "Which feature matters most to you in this solution?",
+    "roman_urdu": "Is solution mein aapke liye sab se zaroori feature kaunsa hai?",
+    "urdu": "اس حل میں آپ کے لیے سب سے اہم فیچر کون سا ہے؟",
+}
 ERROR_MESSAGE = {
     "english": "Sorry, I cannot reply right now. Please try again in a moment or use the Contact ANG team section below.",
     "roman_urdu": "Maaf kijiye, abhi jawab nahi de sakta. Thori der baad try karein ya neeche Contact ANG team section use karein.",
     "urdu": "معذرت، ابھی جواب نہیں دے سکتا۔ تھوڑی دیر بعد کوشش کریں یا نیچے Contact ANG team استعمال کریں۔",
 }
+PROOF_REPLY = {
+    "english": "I can't share confirmed case studies or past results in this chat, but the ANG team can discuss relevant work with you directly.",
+    "roman_urdu": "Main is chat mein confirmed case studies ya pichle results share nahi kar sakta, lekin ANG team aap se relevant kaam ke baare mein direct baat kar sakti hai.",
+    "urdu": "میں اس چیٹ میں تصدیق شدہ کیس اسٹڈیز یا پچھلے نتائج شیئر نہیں کر سکتا، لیکن ANG ٹیم آپ سے متعلقہ کام کے بارے میں براہ راست بات کر سکتی ہے۔",
+}
+PRICE_REPLY = {
+    "english": "Cost and timeline depend on the scope, such as features, integrations, platforms, and complexity, so the ANG team confirms them after reviewing your requirements.",
+    "roman_urdu": "Cost aur timeline scope par depend karte hain, jaise features, integrations, platforms aur complexity, is liye ANG team aapki requirements dekhne ke baad confirm karti hai.",
+    "urdu": "لاگت اور ٹائم لائن اسکوپ پر منحصر ہوتی ہے، جیسے فیچرز، انٹیگریشنز، پلیٹ فارمز اور پیچیدگی، اس لیے ANG ٹیم آپ کی ضروریات دیکھنے کے بعد تصدیق کرتی ہے۔",
+}
+NUDGE = {
+    "english": "You can share your name and WhatsApp or email in the Contact ANG team section below, and the team will follow up.",
+    "roman_urdu": "Aap neeche Contact ANG team section mein apna naam aur WhatsApp ya email share kar dein, ANG team follow up karegi.",
+    "urdu": "آپ نیچے Contact ANG team سیکشن میں اپنا نام اور WhatsApp یا ای میل شیئر کر دیں، ANG ٹیم رابطہ کرے گی۔",
+}
 
+# ---------------------------------------------------------------------------
+# PATTERNS
+# ---------------------------------------------------------------------------
 
-def get_api_key() -> str:
-    return get_secret("GROQ_API_KEY")
+ROMAN_MARKERS = {
+    "hai", "hain", "kya", "kyun", "mujhe", "mera", "meri", "mere", "aap",
+    "aapki", "apki", "hum", "hamari", "lekin", "magar", "nahi", "nahin",
+    "chahiye", "karna", "karte", "karti", "hota", "hoti", "wala", "wali",
+    "yeh", "ye", "woh", "wo", "abhi", "kitna", "kitni", "kitne", "kaise",
+    "kaisa", "batao", "bataen", "se", "ko", "ka", "ki", "ke", "mein",
+    "aur", "ya", "liye", "baad", "pehle", "haan", "theek", "acha", "achha",
+    "shukriya", "kahan", "kab", "kaun", "kaunsa", "karein", "kare", "karo",
+}
 
-
-def detect_language(text: str) -> str:
-    if re.search(r"[\u0600-\u06FF]", text or ""):
-        return "urdu"
-    words = re.findall(r"[A-Za-z]+", (text or "").lower())
-    if not words:
-        return "english"
-    hits = sum(1 for w in words if w in ROMAN_MARKERS)
-    if hits >= 2 or hits / max(len(words), 1) >= 0.18:
-        return "roman_urdu"
-    return "english"
-
-
-def language_instruction(lang: str) -> str:
-    if lang == "roman_urdu":
-        return (
-            "The visitor wrote in Roman Urdu / Hinglish. "
-            "Reply in simple Roman Urdu / Hinglish. "
-            "You are ANG's consultant, not the visitor. "
-            "Ask exactly one short question."
-        )
-    if lang == "urdu":
-        return (
-            "The visitor wrote in Urdu. Reply in simple Urdu. "
-            "You are ANG's consultant, not the visitor. "
-            "Ask exactly one short question."
-        )
-    return (
-        "The visitor wrote in English. Reply in clear English. "
-        "You are ANG's consultant, not the visitor. "
-        "Ask exactly one short question."
-    )
-
-
-def looks_like_roman_urdu(text: str) -> bool:
-    words = re.findall(r"[A-Za-z]+", (text or "").lower())
-    if not words:
-        return False
-    hits = sum(1 for w in words if w in ROMAN_MARKERS)
-    return hits >= 2
-
-
-def enforce_one_question(text: str) -> str:
-    text = (text or "").strip()
-    if not text:
-        return text
-    sentences = [x for x in re.split(r"(?<=[.!?؟])\s+", text) if x]
-    questions = [x for x in sentences if x.rstrip().endswith(("?", "؟"))]
-    if len(questions) <= 1:
-        return text
-    statements = [x for x in sentences if x not in questions]
-    return " ".join(statements + [questions[-1]]).strip()
-
+ROLE_LEAK = re.compile(
+    r"^\s*(mujhe|hamari agency|meri agency|mujh ko)\b",
+    re.IGNORECASE
+)
 
 CLAIM_RE = re.compile(
     r"\b(we\W?ve|we have|we helped|ang has|ang have|our clients?|our customers?|"
@@ -552,27 +520,75 @@ PROOF_RE = re.compile(
     re.IGNORECASE,
 )
 
-INTENT_RE = re.compile(
-    r"\b(price|pricing|cost|quote|budget|charges?|fees?|timeline|how long|deadline|"
-    r"start|hire|meeting|call me|contact|kitna|kitne|qeemat|keemat|rate|kab tak|kab)\b",
+PRICE_RE = re.compile(
+    r"\b(price|pricing|prices|cost|costs|quote|quotation|charges?|fees?|how much|"
+    r"timeline|how long|deadline|delivery time|kitna|kitne|kitni|qeemat|keemat|"
+    r"kab tak|kitne din)\b",
     re.IGNORECASE,
 )
 
-PROOF_REPLY = {
-    "english": "I can't share confirmed case studies or past results in this chat, but the ANG team can discuss relevant work with you directly.",
-    "roman_urdu": "Main is chat mein confirmed case studies ya pichle results share nahi kar sakta, lekin ANG team aap se relevant kaam ke baare mein direct baat kar sakti hai.",
-    "urdu": "میں اس چیٹ میں تصدیق شدہ کیس اسٹڈیز یا پچھلے نتائج شیئر نہیں کر سکتا، لیکن ANG ٹیم آپ سے متعلقہ کام کے بارے میں براہ راست بات کر سکتی ہے۔",
-}
+INTENT_RE = re.compile(
+    r"\b(start|hire|meeting|call me|contact|rate|budget|kab)\b",
+    re.IGNORECASE,
+)
 
-NUDGE = {
-    "english": "You can share your name and WhatsApp or email in the Contact ANG team section below, and the team will follow up.",
-    "roman_urdu": "Aap neeche Contact ANG team section mein apna naam aur WhatsApp ya email share kar dein, ANG team follow up karegi.",
-    "urdu": "آپ نیچے Contact ANG team سیکشن میں اپنا نام اور WhatsApp یا ای میل شیئر کر دیں، ANG ٹیم رابطہ کرے گی۔",
-}
+# ---------------------------------------------------------------------------
+# HELPERS
+# ---------------------------------------------------------------------------
+
+
+def get_secret(name: str, default: str = "") -> str:
+    value = os.getenv(name, "").strip()
+    if value:
+        return value
+    try:
+        return str(st.secrets.get(name, default)).strip()
+    except Exception:
+        return default
+
+
+def detect_language(text: str) -> str:
+    if re.search(r"[\u0600-\u06FF]", text or ""):
+        return "urdu"
+    words = re.findall(r"[A-Za-z]+", (text or "").lower())
+    if not words:
+        return "english"
+    hits = sum(1 for w in words if w in ROMAN_MARKERS)
+    if hits >= 2 or hits / max(len(words), 1) >= 0.18:
+        return "roman_urdu"
+    return "english"
+
+
+def resolve_language(text: str, previous: str) -> str:
+    """Detect language; keep the previous one for very short ambiguous replies."""
+    lang = detect_language(text)
+    word_count = len(re.findall(r"\w+", text or ""))
+    if lang == "english" and word_count <= 3 and previous in ("roman_urdu", "urdu"):
+        return previous
+    return lang
+
+
+def language_instruction(lang: str) -> str:
+    base = "You are ANG's consultant, not the visitor. Ask exactly one short question."
+    if lang == "roman_urdu":
+        return "The visitor wrote in Roman Urdu / Hinglish. Reply in simple Roman Urdu / Hinglish. " + base
+    if lang == "urdu":
+        return "The visitor wrote in Urdu. Reply in simple Urdu. " + base
+    return "The visitor wrote in English. Reply in clear English. " + base
+
+
+def looks_like_roman_urdu(text: str) -> bool:
+    words = re.findall(r"[A-Za-z]+", (text or "").lower())
+    hits = sum(1 for w in words if w in ROMAN_MARKERS)
+    return hits >= 2
 
 
 def split_sentences(text: str) -> list:
     return [x for x in re.split(r"(?<=[.!?؟])\s+", (text or "").strip()) if x]
+
+
+def is_question(sentence: str) -> bool:
+    return sentence.rstrip().endswith(("?", "؟"))
 
 
 def strip_unconfirmed_claims(text: str) -> str:
@@ -580,30 +596,43 @@ def strip_unconfirmed_claims(text: str) -> str:
     return " ".join(kept).strip()
 
 
+def enforce_one_question(text: str) -> str:
+    text = (text or "").strip()
+    sentences = split_sentences(text)
+    questions = [x for x in sentences if is_question(x)]
+    if len(questions) <= 1:
+        return text
+    statements = [x for x in sentences if not is_question(x)]
+    return " ".join(statements + [questions[-1]]).strip()
+
+
+def last_question(text: str):
+    questions = [x for x in split_sentences(text) if is_question(x)]
+    return questions[-1] if questions else None
+
+
 def add_nudge(text: str, lang: str) -> str:
-    line = NUDGE[lang]
     if "contact ang" in text.lower():
         return text
+    line = NUDGE[lang]
     sentences = split_sentences(text)
-    if sentences and sentences[-1].rstrip().endswith(("?", "؟")):
+    if sentences and is_question(sentences[-1]):
         return " ".join(sentences[:-1] + [line, sentences[-1]]).strip()
     return (text + " " + line).strip()
 
 
+# ---------------------------------------------------------------------------
+# MODEL
+# ---------------------------------------------------------------------------
+
+
 def get_client(api_key: str) -> OpenAI:
-    return OpenAI(
-        api_key=api_key,
-        base_url="https://api.groq.com/openai/v1"
-    )
+    return OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
 
-def call_model(client: OpenAI, messages: list, temperature: float = 0.2) -> str:
+def call_model(client, messages: list, temperature: float = 0.2) -> str:
     last_error = None
-    tried = []
-    for model in FALLBACK_MODELS:
-        if not model or model in tried:
-            continue
-        tried.append(model)
+    for model in dict.fromkeys(FALLBACK_MODELS):
         kwargs = dict(
             model=model,
             messages=messages,
@@ -623,14 +652,12 @@ def call_model(client: OpenAI, messages: list, temperature: float = 0.2) -> str:
             text = (response.choices[0].message.content or "").strip()
             if text:
                 return text
-            continue
         except Exception as error:
             last_error = error
-            continue
-    raise RuntimeError(str(last_error) if last_error else "No model available")
+    raise RuntimeError(str(last_error) if last_error else "No model returned a reply")
 
 
-def polish_reply(client: OpenAI, text: str, lang: str, user_message: str) -> str:
+def polish_reply(client, text: str, lang: str, user_message: str) -> str:
     needs_language_fix = lang == "roman_urdu" and not looks_like_roman_urdu(text)
     needs_role_fix = bool(ROLE_LEAK.search(text or ""))
     if not needs_language_fix and not needs_role_fix:
@@ -652,8 +679,54 @@ def polish_reply(client: OpenAI, text: str, lang: str, user_message: str) -> str
         {"role": "system", "content": " ".join(instructions)},
         {"role": "user", "content": text},
     ]
-    rewritten = call_model(client, messages, temperature=0.1)
-    return rewritten or text
+    try:
+        return call_model(client, messages, temperature=0.1) or text
+    except Exception:
+        return text
+
+
+def generate_reply(client, history: list, user_message: str, lang: str,
+                   user_count: int, already_nudged: bool):
+    """Full reply pipeline. Returns (reply, nudged)."""
+    api_messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": language_instruction(lang)},
+    ] + history[-MAX_HISTORY:]
+
+    asks_proof = bool(PROOF_RE.search(user_message))
+    asks_price = bool(PRICE_RE.search(user_message))
+
+    try:
+        reply = call_model(client, api_messages)
+        reply = polish_reply(client, reply, lang, user_message)
+        reply = strip_unconfirmed_claims(reply)
+        reply = enforce_one_question(reply)
+    except Exception:
+        # Price and proof answers are fixed, so they still work if the model is down.
+        if not (asks_proof or asks_price):
+            raise
+        reply = ""
+    if not reply or ROLE_LEAK.search(reply):
+        reply = GENERIC_QUESTION[lang]
+
+    model_q = None if reply == GENERIC_QUESTION[lang] else last_question(reply)
+    if asks_proof:
+        reply = PROOF_REPLY[lang] + " " + (model_q or SCOPE_QUESTION[lang])
+    elif asks_price:
+        reply = PRICE_REPLY[lang] + " " + (model_q or SCOPE_QUESTION[lang])
+
+    wants_contact = asks_proof or asks_price or bool(INTENT_RE.search(user_message))
+    first_time_nudge = user_count >= 3 and not already_nudged
+    nudged = already_nudged
+    if wants_contact or first_time_nudge:
+        reply = add_nudge(reply, lang)
+        nudged = True
+    return reply, nudged
+
+
+# ---------------------------------------------------------------------------
+# LEADS
+# ---------------------------------------------------------------------------
 
 
 def save_lead(data: dict) -> None:
@@ -667,7 +740,7 @@ def save_lead(data: dict) -> None:
 
 
 def notify_team(data: dict) -> bool:
-    """Email the ANG team when a new lead arrives. Returns True if sent."""
+    """Email the ANG team about a new lead. Returns True if the email was sent."""
     host = get_secret("SMTP_HOST", "smtp.gmail.com")
     port = int(get_secret("SMTP_PORT", "587") or 587)
     user = get_secret("SMTP_USER")
@@ -676,8 +749,9 @@ def notify_team(data: dict) -> bool:
     if not (user and password and to_email):
         return False
 
+    who = data.get("name") or data.get("company") or "Website visitor"
     msg = EmailMessage()
-    msg["Subject"] = f"New ANG lead: {data.get('name') or data.get('company') or 'Website visitor'}"
+    msg["Subject"] = re.sub(r"[\r\n]+", " ", f"New ANG lead: {who}")
     msg["From"] = user
     msg["To"] = to_email
     msg.set_content(
@@ -715,11 +789,13 @@ def queue_suggestion(text: str) -> None:
 # ---------------------------------------------------------------------------
 
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": WELCOME_MESSAGE}
-    ]
+    st.session_state.messages = [{"role": "assistant", "content": WELCOME_MESSAGE}]
 if "queued" not in st.session_state:
     st.session_state.queued = None
+if "lang" not in st.session_state:
+    st.session_state.lang = "english"
+if "nudged" not in st.session_state:
+    st.session_state.nudged = False
 
 user_only = [m for m in st.session_state.messages if m["role"] == "user"]
 show_landing = len(user_only) == 0
@@ -741,7 +817,7 @@ if show_landing:
     st.markdown(hero_html, unsafe_allow_html=True)
     st.markdown("<div style='height:34px'></div>", unsafe_allow_html=True)
     cols = st.columns(3)
-    for i, (col, (title, subtitle, prompt)) in enumerate(zip(cols, SUGGESTIONS)):
+    for i, (col, (title, _subtitle, prompt)) in enumerate(zip(cols, SUGGESTIONS)):
         with col:
             st.button(
                 title,
@@ -760,36 +836,27 @@ if st.session_state.queued:
     user_message = st.session_state.queued
     st.session_state.queued = None
 
-api_key = get_api_key()
+if user_message:
+    user_message = user_message.strip()[:MAX_INPUT_CHARS]
 
 if user_message:
     st.session_state.messages.append({"role": "user", "content": user_message})
-
-    lang = detect_language(user_message)
-    api_messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "system", "content": language_instruction(lang)},
-    ] + st.session_state.messages
+    lang = resolve_language(user_message, st.session_state.lang)
+    st.session_state.lang = lang
+    user_count = len([m for m in st.session_state.messages if m["role"] == "user"])
+    api_key = get_secret("GROQ_API_KEY")
 
     try:
         if not api_key:
             raise RuntimeError("missing key")
-        client = get_client(api_key)
-        reply = call_model(client, api_messages)
-        reply = polish_reply(client, reply, lang, user_message)
-        reply = strip_unconfirmed_claims(reply)
-        reply = enforce_one_question(reply)
-        if not reply or ROLE_LEAK.search(reply):
-            reply = GENERIC_QUESTION[lang]
-        if PROOF_RE.search(user_message):
-            # Never let the model improvise proof: use a fixed honest answer.
-            reply = PROOF_REPLY[lang] + " " + GENERIC_QUESTION[lang]
-        user_count = len([m for m in st.session_state.messages if m["role"] == "user"])
-        wants_contact = bool(INTENT_RE.search(user_message))
-        first_time_nudge = user_count >= 3 and not st.session_state.get("nudged")
-        if wants_contact or first_time_nudge or PROOF_RE.search(user_message):
-            reply = add_nudge(reply, lang)
-            st.session_state.nudged = True
+        reply, st.session_state.nudged = generate_reply(
+            get_client(api_key),
+            st.session_state.messages,
+            user_message,
+            lang,
+            user_count,
+            st.session_state.nudged,
+        )
     except Exception:
         reply = ERROR_MESSAGE[lang]
 
@@ -809,31 +876,34 @@ if not show_landing:
                 phone = st.text_input("Phone / WhatsApp")
             problem = st.text_area("Main problem", height=70)
             submitted = st.form_submit_button("Send to ANG")
-            if submitted:
-                if not (name or email or phone):
-                    st.warning("Please enter a name, email, or phone number.")
+
+        if submitted:
+            if not (name.strip() or email.strip() or phone.strip()):
+                st.warning("Please enter a name, email, or phone number.")
+            elif email.strip() and not EMAIL_RE.match(email.strip()):
+                st.warning("Please check your email address.")
+            else:
+                lead = {
+                    "timestamp": datetime.now().isoformat(timespec="seconds"),
+                    "name": name.strip(),
+                    "company": company.strip(),
+                    "email": email.strip(),
+                    "phone": phone.strip(),
+                    "problem": problem.strip(),
+                    "notes": conversation_text(st.session_state.messages),
+                }
+                try:
+                    save_lead(lead)
+                except Exception:
+                    pass
+                try:
+                    sent = notify_team(lead)
+                except Exception:
+                    sent = False
+                if sent:
+                    st.success("Thanks. Your details have been sent to the ANG team.")
                 else:
-                    lead = {
-                        "timestamp": datetime.now().isoformat(timespec="seconds"),
-                        "name": name.strip(),
-                        "company": company.strip(),
-                        "email": email.strip(),
-                        "phone": phone.strip(),
-                        "problem": problem.strip(),
-                        "notes": conversation_text(st.session_state.messages),
-                    }
-                    try:
-                        save_lead(lead)
-                    except Exception:
-                        pass
-                    try:
-                        sent = notify_team(lead)
-                    except Exception:
-                        sent = False
-                    if sent:
-                        st.success("Thanks. Your details have been sent to the ANG team.")
-                    else:
-                        st.warning(
-                            "Your details were noted, but we could not notify the team "
-                            "automatically. Please contact ANG directly."
-                        )
+                    st.warning(
+                        "Your details were noted, but we could not notify the team "
+                        "automatically. Please contact ANG directly."
+                    )
