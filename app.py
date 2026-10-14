@@ -12,21 +12,24 @@ load_dotenv()
 
 st.set_page_config(
     page_title="ANZO | AI Business Consultant",
-    page_icon="💼",
+    page_icon="💬",
     layout="centered"
 )
 
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     html, body, [class*="css"], .stApp {
         font-family: Inter, Arial, sans-serif;
         color-scheme: light !important;
     }
     .stApp {
-        background: linear-gradient(165deg, #061428 0%, #0b2a5b 42%, #1d4ed8 100%) !important;
+        background:
+            radial-gradient(1100px 620px at 6% 10%, rgba(196,190,224,0.45), transparent 62%),
+            radial-gradient(1000px 620px at 94% 16%, rgba(240,200,190,0.42), transparent 58%),
+            linear-gradient(160deg, #f2eef2 0%, #efe9ee 38%, #ece5e2 62%, #e0dddc 100%) !important;
     }
     #MainMenu, footer, header { visibility: hidden !important; }
     .stDeployButton, .stAppDeployButton { display: none !important; }
@@ -40,108 +43,101 @@ st.markdown(
     .stApp > header { display: none !important; }
 
     .block-container {
-        padding: 1.1rem 1rem 7rem 1rem !important;
-        max-width: 780px;
+        padding: 1rem 1rem 7.2rem 1rem !important;
+        max-width: 820px;
     }
 
-    .anzo-hero {
-        background: linear-gradient(135deg, #0b1f44 0%, #163a7a 55%, #2563eb 100%);
-        border: 1px solid rgba(255,255,255,0.16);
-        border-radius: 18px;
-        padding: 22px 22px 18px 22px;
-        box-shadow: 0 16px 40px rgba(2, 12, 36, 0.28);
-        margin-bottom: 14px;
+    .halo-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .halo-top .logo-mini {
+        width: 38px; height: 38px; border-radius: 12px;
+        background: linear-gradient(145deg, #2b221d, #100c0a);
+        color: #fff; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 17px; box-shadow: 0 8px 18px rgba(16,12,10,0.22);
     }
-    .anzo-kicker {
-        margin: 0 0 8px 0;
-        color: #93c5fd;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
+    .halo-top .brand { font-weight: 800; color: #100c0a; font-size: 17px; letter-spacing: 0.01em; }
+
+    .halo-hero { text-align: center; padding: 26px 10px 4px 10px; }
+    .halo-logo {
+        width: 74px; height: 74px; border-radius: 22px;
+        background: linear-gradient(145deg, #2b221d, #100c0a);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 34px; box-shadow: 0 16px 34px rgba(16,12,10,0.28);
     }
-    .anzo-title {
-        margin: 0;
-        color: #ffffff !important;
-        font-size: 30px;
-        line-height: 1.15;
-        font-weight: 700;
+    .halo-hi { color: #967e71; font-size: 21px; font-weight: 600; margin: 18px 0 0 0; }
+    .halo-title { color: #100c0a; font-size: 34px; line-height: 1.18; font-weight: 800; margin: 4px 0 0 0; }
+    .halo-sub { color: #967e71; font-size: 15px; line-height: 1.55; max-width: 540px; margin: 12px auto 0; }
+
+    .halo-card button {
+        width: 100% !important;
+        background: #fbf9f8 !important;
+        border: 1px solid #e8e1df !important;
+        border-radius: 16px !important;
+        padding: 16px 16px !important;
+        text-align: left !important;
+        color: #100c0a !important;
+        font-weight: 700 !important;
+        font-size: 14.5px !important;
+        line-height: 1.35 !important;
+        box-shadow: 0 10px 26px rgba(66,54,48,0.08) !important;
+        min-height: 92px !important;
     }
-    .anzo-sub {
-        margin: 8px 0 0 0;
-        color: #dbeafe !important;
-        font-size: 15px;
-        line-height: 1.55;
+    .halo-card button:hover {
+        border-color: #967e71 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(66,54,48,0.14) !important;
     }
+    .halo-card .cap { color: #967e71; font-size: 12.5px; font-weight: 500; margin: 6px 2px 0; text-align: left; }
 
     [data-testid="stChatMessage"] {
         background: rgba(255,255,255,0.96) !important;
-        border: 1px solid #dbe4f2;
-        border-radius: 14px;
-        padding: 10px 12px !important;
+        border: 1px solid #ece5e2 !important;
+        border-radius: 16px !important;
+        padding: 10px 13px !important;
         margin: 8px 0 !important;
-        box-shadow: 0 6px 18px rgba(7, 20, 48, 0.08);
+        box-shadow: 0 8px 22px rgba(66,54,48,0.07) !important;
     }
-    [data-testid="stChatMessage"] p,
-    [data-testid="stChatMessage"] span,
-    [data-testid="stMarkdownContainer"] p {
-        color: #0f172a !important;
+    [data-testid="stChatMessage"] p { color: #100c0a !important; }
+
+    [data-testid="stChatInput"] { background: transparent !important; }
+    [data-testid="stChatInput"] textarea {
+        background: #ffffff !important;
+        color: #100c0a !important;
+        border: 1px solid #e8e1df !important;
+        border-radius: 999px !important;
+        box-shadow: 0 12px 28px rgba(66,54,48,0.12) !important;
+    }
+    [data-testid="stChatInput"] textarea::placeholder { color: #b0b7c1 !important; }
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #967e71 0%, #e08963 100%) !important;
+        border-radius: 999px !important;
+        color: #ffffff !important;
+        border: 0 !important;
+        box-shadow: 0 8px 20px rgba(150,126,113,0.4) !important;
     }
 
     [data-testid="stExpander"] {
-        background: #ffffff !important;
-        border: 1px solid #c9d7ee !important;
-        border-radius: 14px !important;
+        background: #fbf9f8 !important;
+        border: 1px solid #e8e1df !important;
+        border-radius: 16px !important;
     }
-    [data-testid="stExpander"] p,
-    [data-testid="stExpander"] label,
-    [data-testid="stExpander"] span {
-        color: #1e3a8a !important;
+    [data-testid="stExpander"] p, [data-testid="stExpander"] label, [data-testid="stExpander"] span {
+        color: #423630 !important;
     }
-    .stTextInput label, .stTextArea label {
-        color: #1e3a8a !important;
-        font-weight: 600 !important;
-    }
+    .stTextInput label, .stTextArea label { color: #423630 !important; font-weight: 600 !important; }
     .stTextInput input, .stTextArea textarea {
-        background: #f8fbff !important;
-        color: #0f172a !important;
-        border: 1px solid #b7c9e6 !important;
-        border-radius: 10px !important;
-    }
-    .stTextInput input::placeholder,
-    .stTextArea textarea::placeholder {
-        color: #64748b !important;
-    }
-
-    .stButton > button,
-    .stFormSubmitButton button {
-        background: linear-gradient(135deg, #0b1f44 0%, #1d4ed8 52%, #38bdf8 100%) !important;
-        color: #ffffff !important;
-        border: 0 !important;
-        border-radius: 10px !important;
-        font-weight: 700 !important;
-        padding: 0.55rem 1.1rem !important;
-        box-shadow: 0 8px 18px rgba(29, 78, 216, 0.35) !important;
-    }
-    .stButton > button:hover,
-    .stFormSubmitButton button:hover {
-        filter: brightness(1.08);
-        color: #ffffff !important;
-    }
-
-    [data-testid="stChatInput"] {
-        background: rgba(7, 20, 48, 0.92) !important;
-        border-top: 1px solid rgba(147, 197, 253, 0.25);
-    }
-    [data-testid="stChatInput"] textarea {
         background: #ffffff !important;
-        color: #0f172a !important;
+        color: #100c0a !important;
+        border: 1px solid #ddd3d0 !important;
         border-radius: 12px !important;
     }
-    [data-testid="stChatInput"] button {
-        background: linear-gradient(135deg, #1d4ed8, #38bdf8) !important;
+    .stFormSubmitButton button {
+        background: linear-gradient(135deg, #967e71 0%, #e08963 100%) !important;
         color: #ffffff !important;
         border: 0 !important;
+        border-radius: 999px !important;
+        font-weight: 700 !important;
+        padding: 0.55rem 1.4rem !important;
+        box-shadow: 0 10px 22px rgba(150,126,113,0.38) !important;
     }
     </style>
     """,
@@ -222,6 +218,12 @@ WELCOME_MESSAGE = (
     "automate, or improve in your business — or where your team is losing "
     "time or missing leads."
 )
+
+SUGGESTIONS = [
+    ("⚡", "Automate repetitive work", "Stop wasting team hours"),
+    ("📈", "Stop losing leads", "AI follow-up system"),
+    ("🛠️", "Build a website or app", "Custom software"),
+]
 
 ROMAN_MARKERS = {
     "hai", "hain", "kya", "kyun", "mujhe", "mera", "meri", "mere", "aap",
@@ -381,60 +383,91 @@ if "messages" not in st.session_state:
 
 st.markdown(
     """
-    <div class="anzo-hero">
-      <p class="anzo-kicker">ANZO Agency</p>
-      <h1 class="anzo-title">AI Business Consultant</h1>
-      <p class="anzo-sub">Tell us the business problem. We will help you find the right system to fix it.</p>
+    <div class="halo-top">
+      <span class="logo-mini">💬</span>
+      <span class="brand">ANZO</span>
+    </div>
+    <div class="halo-hero">
+      <span class="halo-logo">🤝</span>
+      <p class="halo-hi">Hi there</p>
+      <h1 class="halo-title">Can I help you with anything?</h1>
+      <p class="halo-sub">Tell me the problem in your business — slow replies, manual work,
+      or missing leads. I will help you find the right system to fix it.</p>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+is_fresh = len(st.session_state.messages) == 1
 
-user_message = st.chat_input("Type your message...")
+if is_fresh:
+    c1, c2, c3 = st.columns(3)
+    clicked = None
+    with c1:
+        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
+        if st.button(f"{SUGGESTIONS[0][0]}  {SUGGESTIONS[0][1]}", use_container_width=True):
+            clicked = SUGGESTIONS[0][1]
+        st.markdown(f'<div class="cap">{SUGGESTIONS[0][2]}</div></div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
+        if st.button(f"{SUGGESTIONS[1][0]}  {SUGGESTIONS[1][1]}", use_container_width=True):
+            clicked = SUGGESTIONS[1][1]
+        st.markdown(f'<div class="cap">{SUGGESTIONS[1][2]}</div></div>', unsafe_allow_html=True)
+    with c3:
+        st.markdown('<div class="halo-card">', unsafe_allow_html=True)
+        if st.button(f"{SUGGESTIONS[2][0]}  {SUGGESTIONS[2][1]}", use_container_width=True):
+            clicked = SUGGESTIONS[2][1]
+        st.markdown(f'<div class="cap">{SUGGESTIONS[2][2]}</div></div>', unsafe_allow_html=True)
+else:
+    for message in st.session_state.messages[1:]:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+user_message = clicked or st.chat_input("Ask ANZO anything...")
 api_key = get_api_key()
 
 if user_message:
     st.session_state.messages.append({"role": "user", "content": user_message})
-    with st.chat_message("user"):
-        st.markdown(user_message)
+    st.rerun()
 
-    lang = detect_language(user_message)
-    api_messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "system", "content": language_instruction(lang)},
-    ] + st.session_state.messages
+if len(st.session_state.messages) > 1:
+    last = st.session_state.messages[-1]
+    if last["role"] == "user":
+        lang = detect_language(last["content"])
+        api_messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": language_instruction(lang)},
+        ] + st.session_state.messages[:-1]
 
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                if not api_key:
-                    raise RuntimeError("missing key")
-                client = get_client(api_key)
-                reply = call_model(client, api_messages)
-                reply = polish_reply(client, reply, lang, user_message)
-                reply = enforce_one_question(reply)
-                if not reply or ROLE_LEAK.search(reply):
-                    reply = (
-                        "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
-                        "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    if not api_key:
+                        raise RuntimeError("missing key")
+                    client = get_client(api_key)
+                    reply = call_model(client, api_messages)
+                    reply = polish_reply(client, reply, lang, last["content"])
+                    reply = enforce_one_question(reply)
+                    if not reply or ROLE_LEAK.search(reply):
+                        reply = (
+                            "Aapki asl problem late replies ki wajah se leads miss hona lagti hai. "
+                            "Abhi website aur WhatsApp ki leads aap kahan save karte hain?"
+                        )
+                    st.markdown(reply)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": reply}
                     )
-                st.markdown(reply)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": reply}
-                )
-            except Exception:
-                fallback = (
-                    "Sorry, I cannot reply right now. Please try again in a moment "
-                    "or contact the ANZO team directly."
-                )
-                st.markdown(fallback)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": fallback}
-                )
+                    st.rerun()
+                except Exception:
+                    fallback = (
+                        "Sorry, I cannot reply right now. Please try again in a moment "
+                        "or contact the ANZO team directly."
+                    )
+                    st.markdown(fallback)
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": fallback}
+                    )
+                    st.rerun()
 
 with st.expander("Contact ANZO team", expanded=False):
     st.caption("Optional. Share your details when you are ready.")
