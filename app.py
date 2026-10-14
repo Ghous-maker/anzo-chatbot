@@ -402,6 +402,12 @@ QUALIFICATION AND NEXT STEP:
 - If the visitor asks about price, timeline, how to start, or shows clear interest, or after about 3 exchanges, tell them they can share their name and WhatsApp or email in the "Contact ANG team" section below the chat so the ANG team can review and follow up. Then end with exactly one question such as whether they would like the ANG team to contact them.
 - Never promise results, pricing, timelines, or capabilities that were not confirmed.
 
+NO INVENTED PROOF:
+- Never say ANG has helped, built, delivered, or worked with any client, clinic, agency, industry, or project. ANG has no confirmed case studies or results you can mention.
+- If asked for case studies, portfolio, past work, or clients, say you cannot share confirmed examples in this chat and the ANG team can discuss relevant work.
+- Describe solutions as what ANG can design, never as guaranteed features. Details are confirmed after the ANG team reviews requirements.
+- For clinics and healthcare: talk about answering inquiries, appointment requests, and reminders. Never promise collecting, storing, or handling medical or health information.
+
 PRICING / TIMELINE:
 - Never invent a price or deadline.
 - Say ANG confirms cost and timeline after reviewing scope.
@@ -528,6 +534,60 @@ def enforce_one_question(text: str) -> str:
         return text
     statements = [x for x in sentences if x not in questions]
     return " ".join(statements + [questions[-1]]).strip()
+
+
+CLAIM_RE = re.compile(
+    r"\b(we\W?ve|we have|we helped|ang has|ang have|our clients?|our customers?|"
+    r"previous clients?|past clients?|hum ne|humne|hamare clients?|hamare customers?|"
+    r"ang ne)\b[^.!?؟]{0,60}\b(help|helped|built|build|delivered|worked|done|improv|"
+    r"increase|reduc|kiya|kiye|banaya|banaye|madad)",
+    re.IGNORECASE,
+)
+
+PROOF_RE = re.compile(
+    r"case stud|portfolio|past work|previous work|past project|previous project|"
+    r"your clients|any client|examples? of|testimonial|success stor|"
+    r"pichle (kaam|project|client)|purane (kaam|project|client)|"
+    r"koi example|kaam dikha",
+    re.IGNORECASE,
+)
+
+INTENT_RE = re.compile(
+    r"\b(price|pricing|cost|quote|budget|charges?|fees?|timeline|how long|deadline|"
+    r"start|hire|meeting|call me|contact|kitna|kitne|qeemat|keemat|rate|kab tak|kab)\b",
+    re.IGNORECASE,
+)
+
+PROOF_REPLY = {
+    "english": "I can't share confirmed case studies or past results in this chat, but the ANG team can discuss relevant work with you directly.",
+    "roman_urdu": "Main is chat mein confirmed case studies ya pichle results share nahi kar sakta, lekin ANG team aap se relevant kaam ke baare mein direct baat kar sakti hai.",
+    "urdu": "میں اس چیٹ میں تصدیق شدہ کیس اسٹڈیز یا پچھلے نتائج شیئر نہیں کر سکتا، لیکن ANG ٹیم آپ سے متعلقہ کام کے بارے میں براہ راست بات کر سکتی ہے۔",
+}
+
+NUDGE = {
+    "english": "You can share your name and WhatsApp or email in the Contact ANG team section below, and the team will follow up.",
+    "roman_urdu": "Aap neeche Contact ANG team section mein apna naam aur WhatsApp ya email share kar dein, ANG team follow up karegi.",
+    "urdu": "آپ نیچے Contact ANG team سیکشن میں اپنا نام اور WhatsApp یا ای میل شیئر کر دیں، ANG ٹیم رابطہ کرے گی۔",
+}
+
+
+def split_sentences(text: str) -> list:
+    return [x for x in re.split(r"(?<=[.!?؟])\s+", (text or "").strip()) if x]
+
+
+def strip_unconfirmed_claims(text: str) -> str:
+    kept = [x for x in split_sentences(text) if not CLAIM_RE.search(x)]
+    return " ".join(kept).strip()
+
+
+def add_nudge(text: str, lang: str) -> str:
+    line = NUDGE[lang]
+    if "contact ang" in text.lower():
+        return text
+    sentences = split_sentences(text)
+    if sentences and sentences[-1].rstrip().endswith(("?", "؟")):
+        return " ".join(sentences[:-1] + [line, sentences[-1]]).strip()
+    return (text + " " + line).strip()
 
 
 def get_client(api_key: str) -> OpenAI:
@@ -717,9 +777,19 @@ if user_message:
         client = get_client(api_key)
         reply = call_model(client, api_messages)
         reply = polish_reply(client, reply, lang, user_message)
+        reply = strip_unconfirmed_claims(reply)
         reply = enforce_one_question(reply)
         if not reply or ROLE_LEAK.search(reply):
             reply = GENERIC_QUESTION[lang]
+        if PROOF_RE.search(user_message):
+            # Never let the model improvise proof: use a fixed honest answer.
+            reply = PROOF_REPLY[lang] + " " + GENERIC_QUESTION[lang]
+        user_count = len([m for m in st.session_state.messages if m["role"] == "user"])
+        wants_contact = bool(INTENT_RE.search(user_message))
+        first_time_nudge = user_count >= 3 and not st.session_state.get("nudged")
+        if wants_contact or first_time_nudge or PROOF_RE.search(user_message):
+            reply = add_nudge(reply, lang)
+            st.session_state.nudged = True
     except Exception:
         reply = ERROR_MESSAGE[lang]
 
